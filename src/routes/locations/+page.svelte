@@ -31,7 +31,10 @@
 					referrerpolicy="no-referrer-when-downgrade"
 				></iframe>
 				<div class="flex flex-1 flex-col p-6">
-					<h2 class="font-display text-xl font-semibold text-ink">{loc.name}</h2>
+					<h2 class="font-display text-xl font-semibold text-ink">
+						<a href="/locations/{loc.id}" class="hover:text-gold-dark">{loc.name}</a>
+					</h2>
+					<p class="mt-2 text-[0.95rem] leading-relaxed text-muted">{loc.long}</p>
 					<p class="mt-3 flex items-start gap-2 text-[0.95rem] leading-relaxed text-muted">
 						<MapPin size={16} class="mt-0.5 shrink-0 text-gold-dark" aria-hidden="true" /> {loc.address}
 					</p>
@@ -47,12 +50,20 @@
 							<li class="rounded-full bg-sand px-3 py-1.5 text-xs font-semibold text-coffee">{f}</li>
 						{/each}
 					</ul>
-					<a
-						href="/order"
-						class="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-coffee px-6 text-sm font-semibold text-white transition-colors duration-200 hover:bg-coffee-dark"
-					>
-						Order from this café
-					</a>
+					<div class="mt-5 flex flex-col gap-2">
+						<a
+							href="/locations/{loc.id}"
+							class="inline-flex min-h-12 items-center justify-center rounded-full bg-coffee px-6 text-sm font-semibold text-white transition-colors duration-200 hover:bg-coffee-dark"
+						>
+							View Details & Hours
+						</a>
+						<a
+							href="/order"
+							class="inline-flex min-h-12 items-center justify-center rounded-full border border-coffee px-6 text-sm font-semibold text-coffee transition-colors duration-200 hover:bg-sand"
+						>
+							Order from this café
+						</a>
+					</div>
 				</div>
 			</article>
 		{/each}

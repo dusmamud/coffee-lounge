@@ -27,7 +27,9 @@
 					<span class="inline-flex items-center gap-1.5"><CalendarDays size={14} aria-hidden="true" /> {ev.date}</span>
 					<span class="inline-flex items-center gap-1.5"><Clock size={14} aria-hidden="true" /> {ev.time}</span>
 				</p>
-				<h2 class="mt-3 font-display text-2xl font-medium text-ink">{ev.title}</h2>
+				<h2 class="mt-3 font-display text-2xl font-medium text-ink">
+					<a href="/events/{ev.id}" class="hover:text-gold-dark">{ev.title}</a>
+				</h2>
 				<p class="mt-2 flex-1 leading-relaxed text-muted">{ev.description}</p>
 				<p class="mt-4 flex items-center gap-2 text-[0.95rem] text-muted">
 					<MapPin size={16} class="shrink-0 text-gold-dark" aria-hidden="true" /> {ev.location}
@@ -37,10 +39,10 @@
 						<Ticket size={16} aria-hidden="true" /> {ev.price}
 					</p>
 					<a
-						href="/contact"
+						href="/events/{ev.id}"
 						class="inline-flex min-h-12 items-center rounded-full bg-coffee px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-coffee-dark"
 					>
-						Reserve a Spot
+						View & Reserve
 					</a>
 				</div>
 			</article>

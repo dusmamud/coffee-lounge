@@ -1,8 +1,19 @@
 // Shared cart state (client-side only, module scope is fine: no SSR data).
 // Persisted to localStorage, guarded for SSR/prerender.
+// Lines are generic so menu drinks (with size/milk/extras customisation),
+// shop beans and merch all share one cart. `id` is unique per customisation.
 import { menuItems } from '#lib/data/site.ts';
 
-export type CartLine = { slug: string; qty: number };
+export type CartLine = {
+	id: string;
+	name: string;
+	price: number; // unit price after customisation
+	image: string; // Picture.svelte base name
+	qty: number;
+	optionsLabel?: string; // e.g. "Large · Oat milk · Extra shot"
+};
+
+const STORAGE_KEY = 'coffee-lounge-cart';
 
 class Cart {
 	lines = $state<CartLine[]>([]);
@@ -11,8 +22,11 @@ class Cart {
 	constructor() {
 		if (typeof window !== 'undefined') {
 			try {
-				const raw = window.localStorage.getItem('coffee-lounge-cart');
-				if (raw) this.lines = JSON.parse(raw) as CartLine[];
+				const raw = window.localStorage.getItem(STORAGE_KEY);
+				if (raw) {
+					const parsed = JSON.parse(raw) as CartLine[];
+					if (Array.isArray(parsed)) this.lines = parsed.filter((l) => l && l.id && l.qty > 0);
+				}
 			} catch {
 				this.lines = [];
 			}
@@ -22,29 +36,37 @@ class Cart {
 	private save() {
 		if (typeof window !== 'undefined') {
 			try {
-				window.localStorage.setItem('coffee-lounge-cart', JSON.stringify(this.lines));
+				window.localStorage.setItem(STORAGE_KEY, JSON.stringify(this.lines));
 			} catch {
 				/* storage unavailable — cart still works in memory */
 			}
 		}
 	}
 
-	add(slug: string) {
-		const line = this.lines.find((l) => l.slug === slug);
-		if (line) line.qty += 1;
-		else this.lines.push({ slug, qty: 1 });
+	/** Add a fully-specified line (menu customisation, shop product). Merges on identical id. */
+	addLine(line: Omit<CartLine, 'qty'>, qty = 1) {
+		const existing = this.lines.find((l) => l.id === line.id);
+		if (existing) existing.qty += qty;
+		else this.lines.push({ ...line, qty });
 		this.save();
 		this.drawerOpen = true;
 	}
 
-	remove(slug: string) {
-		this.lines = this.lines.filter((l) => l.slug !== slug);
+	/** Plain menu add (base price, no customisation) — used by cards and bestsellers. */
+	add(slug: string) {
+		const item = menuItems.find((m) => m.slug === slug);
+		if (!item) return;
+		this.addLine({ id: slug, name: item.name, price: item.price, image: item.image });
+	}
+
+	remove(id: string) {
+		this.lines = this.lines.filter((l) => l.id !== id);
 		this.save();
 	}
 
-	setQty(slug: string, qty: number) {
-		if (qty <= 0) return this.remove(slug);
-		const line = this.lines.find((l) => l.slug === slug);
+	setQty(id: string, qty: number) {
+		if (qty <= 0) return this.remove(id);
+		const line = this.lines.find((l) => l.id === id);
 		if (line) line.qty = qty;
 		this.save();
 	}
@@ -56,15 +78,10 @@ class Cart {
 
 	count = $derived(this.lines.reduce((n, l) => n + l.qty, 0));
 
-	detailed = $derived(
-		this.lines
-			.map((l) => ({ item: menuItems.find((m) => m.slug === l.slug), qty: l.qty }))
-			.filter((d): d is { item: (typeof menuItems)[number]; qty: number } => Boolean(d.item))
-	);
+	/** Back-compat alias: the order page and drawer iterate `detailed`. */
+	detailed = $derived(this.lines);
 
-	subtotal = $derived(
-		this.detailed.reduce((n, d) => n + d.item.price * d.qty, 0)
-	);
+	subtotal = $derived(this.lines.reduce((n, l) => n + l.price * l.qty, 0));
 }
 
 export const cart = new Cart();

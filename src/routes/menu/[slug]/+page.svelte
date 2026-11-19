@@ -11,11 +11,52 @@
 	const related = $derived(
 		menuItems.filter((m) => m.slug !== item.slug && m.category === item.category).slice(0, 3)
 	);
+	const isDrink = $derived(item.temp !== 'Food');
 	let qty = $state(1);
 	let added = $state(false);
 
+	// Customisation (drinks only): size + milk are free choices, extras are paid.
+	const sizes = [
+		{ label: 'Small · 8 oz', delta: -0.5 },
+		{ label: 'Regular · 12 oz', delta: 0 },
+		{ label: 'Large · 16 oz', delta: 1.0 }
+	] as const;
+	const milks = ['Whole milk', 'Oat milk', 'Almond milk', 'Soy milk'] as const;
+	const extras = [
+		{ label: 'Extra shot', price: 1.0 },
+		{ label: 'Vanilla syrup', price: 0.5 },
+		{ label: 'Caramel drizzle', price: 0.5 },
+		{ label: 'Whipped cream', price: 0.75 }
+	] as const;
+	let sizeIdx = $state(1);
+	let milk = $state<(typeof milks)[number]>('Whole milk');
+	let chosenExtras = $state<string[]>([]);
+	const extrasTotal = $derived(
+		extras.filter((e) => chosenExtras.includes(e.label)).reduce((n, e) => n + e.price, 0)
+	);
+	const unitPrice = $derived(
+		isDrink ? item.price + sizes[sizeIdx].delta + extrasTotal : item.price
+	);
+	const optionsLabel = $derived(
+		isDrink
+			? [
+					sizes[sizeIdx].label.split(' · ')[0],
+					milk.replace(' milk', ''),
+					...chosenExtras
+				].join(' · ')
+			: undefined
+	);
+
 	const addToCart = () => {
-		for (let i = 0; i < qty; i++) cart.add(item.slug);
+		if (isDrink) {
+			const id = `${item.slug}|${sizeIdx}|${milk}|${chosenExtras.join('+')}`;
+			cart.addLine(
+				{ id, name: item.name, price: unitPrice, image: item.image, optionsLabel },
+				qty
+			);
+		} else {
+			for (let i = 0; i < qty; i++) cart.add(item.slug);
+		}
 		added = true;
 		setTimeout(() => (added = false), 2000);
 	};
@@ -57,7 +98,7 @@
 		<div>
 			<p class="text-xs font-bold tracking-[0.3em] text-gold-dark">{item.category.toUpperCase()} · {item.temp.toUpperCase()}</p>
 			<h1 class="mt-3 font-display text-[clamp(2rem,5vw,3rem)] leading-tight font-medium text-ink">{item.name}</h1>
-			<p class="mt-3 font-display text-2xl font-semibold text-coffee">{money(item.price)}</p>
+			<p class="mt-3 font-display text-2xl font-semibold text-coffee">{money(unitPrice)}{#if isDrink && unitPrice !== item.price}<span class="ml-2 text-base font-normal text-muted line-through">{money(item.price)}</span>{/if}</p>
 			<p class="mt-4 max-w-lg leading-relaxed text-muted">{item.long}</p>
 
 			<div class="mt-5 flex flex-wrap gap-2 text-sm">
@@ -83,12 +124,69 @@
 				{/each}
 			</ul>
 
-			<h2 class="mt-6 font-display text-lg font-semibold text-ink">Make it yours</h2>
-			<ul class="mt-2 flex flex-wrap gap-2">
-				{#each item.options as opt}
-					<li class="rounded-full border border-line bg-white px-3.5 py-2 text-sm text-ink">{opt}</li>
-				{/each}
-			</ul>
+			{#if isDrink}
+				<fieldset class="mt-7">
+					<legend class="font-display text-lg font-semibold text-ink">Size</legend>
+					<div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Drink size">
+						{#each sizes as s, i}
+							<button
+								type="button"
+								role="radio"
+								aria-checked={sizeIdx === i}
+								onclick={() => (sizeIdx = i)}
+								class="min-h-12 rounded-full px-4 text-sm font-semibold transition-colors duration-150 {sizeIdx === i ? 'bg-coffee text-white' : 'border border-line bg-white text-ink hover:border-coffee'}"
+							>
+								{s.label}{s.delta !== 0 ? ` (${s.delta > 0 ? '+' : ''}${money(s.delta)})` : ''}
+							</button>
+						{/each}
+					</div>
+				</fieldset>
+				<fieldset class="mt-5">
+					<legend class="font-display text-lg font-semibold text-ink">Milk — always free</legend>
+					<div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Milk choice">
+						{#each milks as m}
+							<button
+								type="button"
+								role="radio"
+								aria-checked={milk === m}
+								onclick={() => (milk = m)}
+								class="min-h-12 rounded-full px-4 text-sm font-semibold transition-colors duration-150 {milk === m ? 'bg-coffee text-white' : 'border border-line bg-white text-ink hover:border-coffee'}"
+							>
+								{m}
+							</button>
+						{/each}
+					</div>
+				</fieldset>
+				<fieldset class="mt-5">
+					<legend class="font-display text-lg font-semibold text-ink">Extras</legend>
+					<div class="mt-2 flex flex-wrap gap-2">
+						{#each extras as e}
+							<button
+								type="button"
+								aria-pressed={chosenExtras.includes(e.label)}
+								onclick={() =>
+									(chosenExtras = chosenExtras.includes(e.label)
+										? chosenExtras.filter((x) => x !== e.label)
+										: [...chosenExtras, e.label])}
+								class="min-h-12 rounded-full px-4 text-sm font-semibold transition-colors duration-150 {chosenExtras.includes(e.label) ? 'bg-coffee text-white' : 'border border-line bg-white text-ink hover:border-coffee'}"
+							>
+								{e.label} +{money(e.price)}
+							</button>
+						{/each}
+					</div>
+				</fieldset>
+			{:else}
+				<h2 class="mt-6 font-display text-lg font-semibold text-ink">Make it yours</h2>
+				<ul class="mt-2 flex flex-wrap gap-2">
+					{#each item.options as opt}
+						<li class="rounded-full border border-line bg-white px-3.5 py-2 text-sm text-ink">{opt}</li>
+					{/each}
+				</ul>
+			{/if}
+			<p class="mt-5 text-sm leading-relaxed text-muted">
+				Allergens: {item.allergens.length > 0 ? item.allergens.join(', ') : 'None of the 14 major allergens'}.
+				Full nutrition &amp; allergen table on the <a href="/nutrition" class="font-semibold text-coffee underline underline-offset-2">Nutrition page</a>.
+			</p>
 
 			<div class="mt-8 flex flex-wrap items-center gap-3">
 				<div class="flex items-center rounded-full border border-line bg-white" role="group" aria-label="Quantity">
@@ -101,7 +199,7 @@
 					onclick={addToCart}
 					class="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-coffee px-6 text-base font-semibold text-white transition-colors duration-200 hover:bg-coffee-dark sm:flex-none sm:px-8"
 				>
-					{#if added}<Check size={18} aria-hidden="true" /> Added to cart{:else}<Plus size={18} aria-hidden="true" /> Add to Order · {money(item.price * qty)}{/if}
+					{#if added}<Check size={18} aria-hidden="true" /> Added to cart{:else}<Plus size={18} aria-hidden="true" /> Add to Order · {money(unitPrice * qty)}{/if}
 				</button>
 			</div>
 			<p class="mt-3 text-sm text-muted">Dairy-free milk is always free. Tell us about allergies at the counter — we take them seriously.</p>

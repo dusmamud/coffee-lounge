@@ -10,6 +10,9 @@
 		Users,
 		Wheat
 	} from '@lucide/svelte';
+	import emblaCarouselSvelte from 'embla-carousel-svelte';
+	import Autoplay from 'embla-carousel-autoplay';
+	import type { EmblaCarouselType } from 'embla-carousel';
 	import type { PageData } from './$types';
 	import MenuCard from '#lib/components/MenuCard.svelte';
 	import Picture from '#lib/components/Picture.svelte';
@@ -20,10 +23,23 @@
 	const signature = $derived(data.menuItems.filter((m) => m.signature));
 	const bestsellers = $derived(data.menuItems.filter((m) => m.bestseller).slice(0, 3));
 
+	// Testimonials: Embla swipe carousel, autoplay 6s, pauses on hover/focus
+	// and when the user interacts; no autoplay at all for reduced motion.
 	let tIndex = $state(0);
 	const tCount = $derived(data.testimonials.length);
-	const nextT = () => (tIndex = (tIndex + 1) % tCount);
-	const prevT = () => (tIndex = (tIndex - 1 + tCount) % tCount);
+	let emblaApi: EmblaCarouselType | undefined = $state(undefined);
+	const reducedMotion =
+		typeof window !== 'undefined' &&
+		window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const autoplay = reducedMotion
+		? []
+		: [Autoplay({ delay: 6000, stopOnInteraction: true, stopOnMouseEnter: true })];
+	const onEmblaInit = (e: CustomEvent<EmblaCarouselType>) => {
+		emblaApi = e.detail;
+		emblaApi.on('select', () => (tIndex = emblaApi?.selectedScrollSnap() ?? 0));
+	};
+	const nextT = () => emblaApi?.scrollNext();
+	const prevT = () => emblaApi?.scrollPrev();
 
 	let email = $state('');
 	let subscribed = $state(false);
@@ -153,7 +169,7 @@
 <!-- ─── Bestsellers + Testimonials ─── -->
 <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
 	<div class="grid gap-10 lg:grid-cols-2">
-		<div>
+		<div class="min-w-0">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<h2 class="font-display text-[clamp(1.7rem,4vw,2.2rem)] font-medium text-ink">
 					Bestsellers <span class="text-gold" aria-hidden="true">—</span>
@@ -197,36 +213,60 @@
 			</div>
 		</div>
 
-		<div>
+		<div class="min-w-0">
 			<h2 class="font-display text-[clamp(1.7rem,4vw,2.2rem)] font-medium text-ink">
 				What Our Guests Say <span class="text-gold" aria-hidden="true">—</span>
 			</h2>
-			<div class="mt-6 rounded-3xl bg-white p-6 ring-1 ring-line sm:p-8">
-				<div class="flex items-start gap-4">
-					<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-coffee font-display text-xl font-semibold text-white" aria-hidden="true">
-						{data.testimonials[tIndex].name.charAt(0)}
-					</div>
-					<div>
-						<p class="flex" aria-label="Rated {data.testimonials[tIndex].stars} out of 5">
-							{#each Array(data.testimonials[tIndex].stars) as _}<Star size={16} class="fill-amber-400 text-amber-400" aria-hidden="true" />{/each}
-						</p>
-						<blockquote class="mt-2 leading-relaxed text-ink">
-							“{data.testimonials[tIndex].quote}”
-						</blockquote>
-						<p class="mt-3 text-sm font-semibold text-ink">
-							{data.testimonials[tIndex].name}
-							<span class="block font-normal text-muted">{data.testimonials[tIndex].role}</span>
-						</p>
+			<div class="mt-6 min-w-0 overflow-hidden rounded-3xl bg-white ring-1 ring-line">
+				<div
+					class="min-w-0 overflow-hidden"
+					use:emblaCarouselSvelte={{ options: { loop: true }, plugins: autoplay }}
+					onemblaInit={onEmblaInit}
+				>
+					<div class="flex">
+						{#each data.testimonials as t}
+							<div class="min-w-0 flex-[0_0_100%] p-6 sm:p-8" aria-roledescription="slide">
+								<div class="flex items-start gap-4">
+									<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-coffee font-display text-xl font-semibold text-white" aria-hidden="true">
+										{t.name.charAt(0)}
+									</div>
+									<div class="min-w-0">
+										<p class="flex" aria-label="Rated {t.stars} out of 5">
+											{#each Array(t.stars) as _}<Star size={16} class="fill-amber-400 text-amber-400" aria-hidden="true" />{/each}
+										</p>
+										<blockquote class="mt-2 leading-relaxed text-ink">“{t.quote}”</blockquote>
+										<p class="mt-3 text-sm font-semibold text-ink">
+											{t.name}
+											<span class="block font-normal text-muted">{t.role}</span>
+										</p>
+									</div>
+								</div>
+							</div>
+						{/each}
 					</div>
 				</div>
-				<div class="mt-6 flex items-center justify-between">
-					<p class="text-sm text-muted">{tIndex + 1} of {tCount}</p>
+				<div class="flex items-center justify-between border-t border-line px-6 py-4 sm:px-8">
+					<div class="flex gap-2" role="tablist" aria-label="Choose testimonial">
+						{#each data.testimonials as _, i}
+							<button
+								type="button"
+								role="tab"
+								aria-selected={tIndex === i}
+								aria-label="Testimonial {i + 1} of {tCount}"
+								onclick={() => emblaApi?.scrollTo(i)}
+								class="h-3 rounded-full transition-[width] duration-200 {tIndex === i ? 'w-8 bg-coffee' : 'w-3 bg-line hover:bg-gold'}"
+							></button>
+						{/each}
+					</div>
 					<div class="flex gap-2">
 						<button type="button" onclick={prevT} aria-label="Previous testimonial" class="flex h-12 w-12 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">←</button>
 						<button type="button" onclick={nextT} aria-label="Next testimonial" class="flex h-12 w-12 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">→</button>
 					</div>
 				</div>
 			</div>
+			<p class="mt-4 text-center text-sm">
+				<a href="/reviews" class="font-semibold text-coffee underline underline-offset-2">Read all {tCount} guest reviews →</a>
+			</p>
 			<div class="mt-6 grid grid-cols-3 gap-4 text-center">
 				{#each [['3', 'Cafés in Maple City'], ['18 hrs', 'Slow-steeped cold brew'], ['2019', 'Pouring since']] as s}
 					<div class="rounded-3xl bg-sand px-3 py-5">
@@ -236,6 +276,41 @@
 				{/each}
 			</div>
 		</div>
+	</div>
+</section>
+
+<!-- ─── Shop strip ─── -->
+<section class="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+	<div class="grid items-center gap-8 overflow-hidden rounded-[2rem] bg-sand p-6 sm:p-10 lg:grid-cols-[1fr_320px]">
+		<div class="reveal">
+			<p class="text-xs font-bold tracking-[0.3em] text-gold-dark">THE LOUNGE SHOP</p>
+			<h2 class="mt-3 font-display text-[clamp(1.7rem,4vw,2.4rem)] leading-tight font-medium text-ink">
+				Take the Lounge Home
+			</h2>
+			<p class="mt-3 max-w-lg leading-relaxed text-muted">
+				Maple Roast and single-origin beans, coffee subscriptions from $16 a month, and the mug
+				your mornings deserve — roasted Tuesdays at Riverside, shipped or ready for pickup.
+			</p>
+			<div class="mt-6 flex flex-wrap gap-3">
+				<a href="/shop" class="inline-flex min-h-12 items-center gap-2 rounded-full bg-coffee px-6 text-base font-semibold text-white transition-colors duration-200 hover:bg-coffee-dark">
+					Shop Beans & Merch <ArrowRight size={17} aria-hidden="true" />
+				</a>
+				<a href="/brew-guides" class="inline-flex min-h-12 items-center rounded-full border border-coffee px-6 text-base font-semibold text-coffee hover:bg-white">
+					Brew Guides
+				</a>
+			</div>
+		</div>
+		<a href="/shop" class="block overflow-hidden rounded-3xl" aria-label="Shop coffee subscriptions">
+			<Picture
+				name="subscription-box"
+				alt="Open coffee subscription box with bean bags and a tasting card"
+				width={800}
+				height={600}
+				sizes="(max-width: 1024px) 90vw, 320px"
+				imgClass="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 ease-out hover:scale-105"
+				pictureClass="block"
+			/>
+		</a>
 	</div>
 </section>
 

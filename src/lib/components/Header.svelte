@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Mail, MapPin, Menu, Phone, Search, ShoppingBag, X } from '@lucide/svelte';
 	import { cart } from '#lib/cart.svelte.ts';
-	import { nav, site } from '#lib/data/site.ts';
+	import { moreNav, nav, site } from '#lib/data/site.ts';
 	import Logo from './Logo.svelte';
 	import SocialIcon from './SocialIcon.svelte';
 
@@ -66,8 +66,8 @@
 
 		<div class="flex items-center gap-1 sm:gap-2">
 			<a
-				href="/menu"
-				aria-label="Search the menu"
+				href="/search"
+				aria-label="Search the menu, blog and events"
 				class="hidden h-12 w-12 items-center justify-center rounded-full text-ink transition-colors duration-150 hover:text-gold-dark min-[400px]:flex"
 			>
 				<Search size={20} aria-hidden="true" />
@@ -118,6 +118,18 @@
 					{item.label}
 				</a>
 			{/each}
+			<p class="mt-4 text-xs font-bold tracking-[0.2em] text-gold-dark">MORE AT THE LOUNGE</p>
+			<div class="mt-1 grid grid-cols-2 gap-x-4">
+				{#each moreNav as item}
+					<a
+						href={item.href}
+						class="block min-h-12 content-center border-b border-line/60 py-2 text-sm font-medium text-ink/80"
+						onclick={() => (open = false)}
+					>
+						{item.label}
+					</a>
+				{/each}
+			</div>
 			<div class="mt-4 flex gap-3">
 				<a
 					href="/order"

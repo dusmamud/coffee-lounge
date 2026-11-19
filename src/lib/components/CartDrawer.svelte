@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Minus, Plus, ShoppingBag, Trash2, X } from '@lucide/svelte';
 	import { cart } from '#lib/cart.svelte.ts';
+	import Picture from '#lib/components/Picture.svelte';
 	import { DELIVERY_FEE, FREE_DELIVERY_MIN, money } from '#lib/data/site.ts';
 
 	const freeDeliveryProgress = $derived(
@@ -65,25 +66,28 @@
 			</div>
 
 			<ul class="flex-1 divide-y divide-line overflow-y-auto px-5">
-				{#each cart.detailed as line (line.item.slug)}
+				{#each cart.detailed as line (line.id)}
 					<li class="flex items-center gap-3 py-4">
-						<img
-							src="/images/{line.item.image}-480.jpg"
+						<Picture
+							name={line.image}
 							alt=""
-							width="64"
-							height="64"
-							loading="lazy"
-							decoding="async"
-							class="h-16 w-16 shrink-0 rounded-2xl object-cover"
+							width={480}
+							height={480}
+							sizes="64px"
+							imgClass="h-16 w-16 shrink-0 rounded-2xl object-cover"
+							pictureClass="shrink-0"
 						/>
 						<div class="min-w-0 flex-1">
-							<p class="truncate font-semibold text-ink">{line.item.name}</p>
-							<p class="text-sm text-muted">{money(line.item.price)} each</p>
+							<p class="truncate font-semibold text-ink">{line.name}</p>
+							{#if line.optionsLabel}
+								<p class="truncate text-xs text-muted">{line.optionsLabel}</p>
+							{/if}
+							<p class="text-sm text-muted">{money(line.price)} each</p>
 							<div class="mt-1.5 flex items-center gap-2">
 								<button
 									type="button"
-									aria-label="Decrease quantity of {line.item.name}"
-									onclick={() => cart.setQty(line.item.slug, line.qty - 1)}
+									aria-label="Decrease quantity of {line.name}"
+									onclick={() => cart.setQty(line.id, line.qty - 1)}
 									class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee"
 								>
 									<Minus size={16} aria-hidden="true" />
@@ -91,8 +95,8 @@
 								<span class="min-w-6 text-center font-semibold" aria-label="Quantity {line.qty}">{line.qty}</span>
 								<button
 									type="button"
-									aria-label="Increase quantity of {line.item.name}"
-									onclick={() => cart.setQty(line.item.slug, line.qty + 1)}
+									aria-label="Increase quantity of {line.name}"
+									onclick={() => cart.setQty(line.id, line.qty + 1)}
 									class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee"
 								>
 									<Plus size={16} aria-hidden="true" />
@@ -100,11 +104,11 @@
 							</div>
 						</div>
 						<div class="flex flex-col items-end gap-2">
-							<p class="font-semibold text-ink">{money(line.item.price * line.qty)}</p>
+							<p class="font-semibold text-ink">{money(line.price * line.qty)}</p>
 							<button
 								type="button"
-								aria-label="Remove {line.item.name} from cart"
-								onclick={() => cart.remove(line.item.slug)}
+								aria-label="Remove {line.name} from cart"
+								onclick={() => cart.remove(line.id)}
 								class="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:text-red-700"
 							>
 								<Trash2 size={17} aria-hidden="true" />

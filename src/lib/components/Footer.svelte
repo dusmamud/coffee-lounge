@@ -46,7 +46,7 @@
 		<div>
 			<h3 class="font-semibold text-cream">Explore</h3>
 			<nav aria-label="Footer" class="mt-3 flex flex-col gap-1">
-				{#each [...nav, { label: 'Gift Cards', href: '/gift-cards' }, { label: 'Coffee Loop Rewards', href: '/loyalty' }, { label: 'Blog', href: '/blog' }] as item}
+				{#each [...nav, { label: 'Gift Cards', href: '/gift-cards' }, { label: 'Coffee Loop Rewards', href: '/loyalty' }, { label: 'Blog', href: '/blog' }, { label: 'Search', href: '/search' }, { label: 'Track Your Order', href: '/track-order' }, { label: 'Brew Guides', href: '/brew-guides' }, { label: 'Reviews', href: '/reviews' }, { label: 'Catering & Private Events', href: '/catering' }, { label: 'First Visit', href: '/first-visit' }] as item}
 					<a href={item.href} class="min-h-12 content-center text-[0.95rem] text-cream/70 hover:text-white">
 						{item.label}
 					</a>

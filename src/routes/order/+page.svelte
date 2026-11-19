@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Check, Clock, MapPin, ShoppingBag } from '@lucide/svelte';
 	import { cart } from '#lib/cart.svelte.ts';
+	import { points } from '#lib/points.svelte.ts';
 	import PageHero from '#lib/components/PageHero.svelte';
+	import Picture from '#lib/components/Picture.svelte';
 	import {
 		DELIVERY_FEE,
 		FREE_DELIVERY_MIN,
@@ -17,11 +19,31 @@
 	let name = $state('');
 	let phone = $state('');
 	let address = $state('');
-	let payment = $state<'card' | 'upi' | 'cash'>('card');
+	let payment = $state<'card' | 'applepay' | 'cash'>('card');
 	let cardLast4 = $state('');
 	let placed = $state(false);
 	let orderRef = $state('');
 	let eta = $state('');
+	let earnedPoints = $state(0);
+
+	// Pickup time slots, generated on the client (prerender-safe): ASAP plus
+	// the next 30-minute slots from now until 7:30 PM today.
+	let slots = $state<string[]>(['ASAP · ready in ~15 min']);
+	let slot = $state('ASAP · ready in ~15 min');
+	$effect(() => {
+		const now = new Date();
+		const list = ['ASAP · ready in ~15 min'];
+		const d = new Date(now);
+		d.setMinutes(Math.ceil((d.getMinutes() + 30) / 30) * 30, 0, 0);
+		while (d.getHours() < 19 || (d.getHours() === 19 && d.getMinutes() <= 30)) {
+			list.push(
+				`Today · ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+			);
+			d.setMinutes(d.getMinutes() + 30);
+		}
+		slots = list.slice(0, 9);
+		if (!slots.includes(slot)) slot = slots[0];
+	});
 
 	const deliveryFee = $derived(mode === 'delivery' && cart.subtotal < FREE_DELIVERY_MIN ? DELIVERY_FEE : 0);
 	const tax = $derived(cart.subtotal * TAX_RATE);
@@ -35,7 +57,30 @@
 		e.preventDefault();
 		const ref = `CL-${Math.floor(100000 + Math.random() * 900000)}`;
 		orderRef = ref;
-		eta = mode === 'pickup' ? 'Ready in about 15 minutes' : 'Arriving in about 30–40 minutes';
+		eta =
+			mode === 'pickup'
+				? slot.startsWith('ASAP')
+					? 'Ready in about 15 minutes'
+					: `Ready for pickup ${slot.replace('Today · ', 'today at ')}`
+				: 'Arriving in about 30–40 minutes';
+		// Save the order so /track-order can find it (mock, localStorage only).
+		try {
+			const raw = window.localStorage.getItem('coffee-lounge-orders');
+			const prev = raw ? JSON.parse(raw) : [];
+			prev.unshift({
+				ref,
+				status: 'confirmed',
+				placedAt: `${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}, ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · ${mode === 'pickup' ? `Pickup · ${locations.find((l) => l.id === locationId)?.name}` : 'Delivery'}`,
+				items: cart.detailed.map((l) => `${l.qty} × ${l.name}`).join(', '),
+				total: money(total),
+				eta,
+				lines: cart.detailed.map((l) => ({ id: l.id, name: l.name, price: l.price, image: l.image, qty: l.qty, optionsLabel: l.optionsLabel ?? '' }))
+			});
+			window.localStorage.setItem('coffee-lounge-orders', JSON.stringify(prev.slice(0, 10)));
+		} catch {
+			/* storage unavailable — confirmation still works */
+		}
+		earnedPoints = points.earn(total);
 		placed = true;
 		step = 3;
 		cart.clear();
@@ -70,13 +115,19 @@
 			<div class="mx-auto mt-6 max-w-md rounded-2xl bg-sand p-5 text-left">
 				<p class="flex justify-between text-[0.95rem]"><span class="text-muted">Order reference</span><strong class="text-ink">{orderRef}</strong></p>
 				<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Fulfilment</span><strong class="text-ink">{mode === 'pickup' ? `Pickup · ${locations.find((l) => l.id === locationId)?.name}` : 'Delivery'}</strong></p>
-				<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Payment</span><strong class="text-ink">{payment === 'card' ? 'Card (mock)' : payment === 'upi' ? 'UPI (mock)' : 'Pay at counter'}</strong></p>
+				{#if mode === 'pickup'}
+					<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Pickup time</span><strong class="text-ink">{slot}</strong></p>
+				{/if}
+				<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Payment</span><strong class="text-ink">{payment === 'card' ? 'Card (mock)' : payment === 'applepay' ? 'Apple Pay (mock)' : 'Pay at counter'}</strong></p>
 				<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Total paid</span><strong class="text-ink">{money(total)}</strong></p>
+				{#if earnedPoints > 0}
+					<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Coffee Loop points earned</span><strong class="text-coffee">+{earnedPoints} pts</strong></p>
+				{/if}
 			</div>
 			<p class="mt-5 text-sm text-muted">Show your order reference at the counter, or keep it for delivery. A confirmation email is on its way (mock).</p>
 			<div class="mt-7 flex flex-wrap justify-center gap-3">
-				<a href="/menu" class="inline-flex min-h-12 items-center rounded-full bg-coffee px-6 text-sm font-semibold text-white hover:bg-coffee-dark">Order Something Else</a>
-				<a href="/" class="inline-flex min-h-12 items-center rounded-full border border-coffee px-6 text-sm font-semibold text-coffee hover:bg-sand">Back to Home</a>
+				<a href="/track-order?ref={orderRef}" class="inline-flex min-h-12 items-center rounded-full bg-coffee px-6 text-sm font-semibold text-white hover:bg-coffee-dark">Track This Order</a>
+				<a href="/menu" class="inline-flex min-h-12 items-center rounded-full border border-coffee px-6 text-sm font-semibold text-coffee hover:bg-sand">Order Something Else</a>
 			</div>
 		</div>
 	{:else}
@@ -102,19 +153,30 @@
 			{:else}
 				<div class="grid gap-6 lg:grid-cols-[1fr_340px]">
 					<ul class="divide-y divide-line rounded-3xl bg-white ring-1 ring-line">
-						{#each cart.detailed as line (line.item.slug)}
+						{#each cart.detailed as line (line.id)}
 							<li class="flex items-center gap-3 px-5 py-4">
-								<img src="/images/{line.item.image}-480.jpg" alt="" width="64" height="64" loading="lazy" decoding="async" class="h-16 w-16 shrink-0 rounded-2xl object-cover" />
+								<Picture
+									name={line.image}
+									alt=""
+									width={480}
+									height={480}
+									sizes="64px"
+									imgClass="h-16 w-16 shrink-0 rounded-2xl object-cover"
+									pictureClass="shrink-0"
+								/>
 								<div class="min-w-0 flex-1">
-									<p class="truncate font-semibold text-ink">{line.item.name}</p>
-									<p class="text-sm text-muted">{money(line.item.price)} each</p>
+									<p class="truncate font-semibold text-ink">{line.name}</p>
+									{#if line.optionsLabel}
+										<p class="truncate text-xs text-muted">{line.optionsLabel}</p>
+									{/if}
+									<p class="text-sm text-muted">{money(line.price)} each</p>
 									<div class="mt-1.5 flex items-center gap-2">
-										<button type="button" aria-label="Decrease quantity of {line.item.name}" onclick={() => cart.setQty(line.item.slug, line.qty - 1)} class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">−</button>
+										<button type="button" aria-label="Decrease quantity of {line.name}" onclick={() => cart.setQty(line.id, line.qty - 1)} class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">−</button>
 										<span class="min-w-6 text-center font-semibold">{line.qty}</span>
-										<button type="button" aria-label="Increase quantity of {line.item.name}" onclick={() => cart.setQty(line.item.slug, line.qty + 1)} class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">+</button>
+										<button type="button" aria-label="Increase quantity of {line.name}" onclick={() => cart.setQty(line.id, line.qty + 1)} class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">+</button>
 									</div>
 								</div>
-								<p class="font-semibold text-ink">{money(line.item.price * line.qty)}</p>
+								<p class="font-semibold text-ink">{money(line.price * line.qty)}</p>
 							</li>
 						{/each}
 					</ul>
@@ -159,6 +221,23 @@
 							<select id="pickup-location" bind:value={locationId} class="mt-2 min-h-12 w-full rounded-full border border-line bg-cream px-4 text-base">
 								{#each locations as l}<option value={l.id}>{l.name} — {l.address}</option>{/each}
 							</select>
+							<fieldset class="mt-5">
+								<legend class="text-sm font-semibold text-ink">Pickup time</legend>
+								<div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Pickup time slot">
+									{#each slots as s}
+										<button
+											type="button"
+											role="radio"
+											aria-checked={slot === s}
+											onclick={() => (slot = s)}
+											class="min-h-12 rounded-full px-4 text-sm font-semibold transition-colors duration-150 {slot === s ? 'bg-coffee text-white' : 'border border-line bg-cream text-ink hover:border-coffee'}"
+										>
+											{s}
+										</button>
+									{/each}
+								</div>
+								<p class="mt-2 text-xs text-muted">Morning rush? Book a slot and skip the queue — your order waits at the pickup shelf.</p>
+							</fieldset>
 						{:else}
 							<label class="mt-5 block text-sm font-semibold text-ink" for="delivery-address">Delivery address</label>
 							<input id="delivery-address" type="text" bind:value={address} required placeholder="Street, apartment, city, ZIP" class="mt-2 min-h-12 w-full rounded-full border border-line bg-cream px-4 text-base placeholder:text-muted" />
@@ -183,12 +262,12 @@
 					<fieldset class="rounded-3xl bg-white p-6 ring-1 ring-line">
 						<legend class="font-display text-lg font-semibold text-ink">Payment (mock — nothing is charged)</legend>
 						<div class="mt-4 flex flex-wrap gap-2" role="radiogroup" aria-label="Payment method">
-							{#each [{ v: 'card', t: 'Card' }, { v: 'upi', t: 'UPI' }, { v: 'cash', t: 'Pay at counter' }] as p}
+							{#each [{ v: 'card', t: 'Card' }, { v: 'applepay', t: 'Apple Pay' }, { v: 'cash', t: 'Pay at counter' }] as p}
 								<button
 									type="button"
 									role="radio"
 									aria-checked={payment === p.v}
-									onclick={() => (payment = p.v as 'card' | 'upi' | 'cash')}
+									onclick={() => (payment = p.v as 'card' | 'applepay' | 'cash')}
 									class="min-h-12 rounded-full px-5 text-sm font-semibold transition-colors duration-150 {payment === p.v ? 'bg-coffee text-white' : 'border border-line bg-cream text-ink hover:border-coffee'}"
 								>
 									{p.t}
@@ -199,8 +278,8 @@
 							<label class="mt-4 block text-sm font-semibold text-ink" for="card-last4">Card number (demo — last 4 digits only)</label>
 							<input id="card-last4" type="text" inputmode="numeric" maxlength="4" bind:value={cardLast4} placeholder="4242" class="mt-2 min-h-12 w-40 rounded-full border border-line bg-cream px-4 text-base placeholder:text-muted" />
 							<p class="mt-2 text-xs text-muted">Demo checkout: enter any 4 digits. No real card details are collected or stored.</p>
-						{:else if payment === 'upi'}
-							<p class="mt-4 text-sm text-muted">You would be redirected to your UPI app in the real checkout. This demo skips that step.</p>
+						{:else if payment === 'applepay'}
+							<p class="mt-4 text-sm text-muted">You would confirm with Face ID / Touch ID in the real checkout. This demo skips that step.</p>
 						{:else}
 							<p class="mt-4 flex items-start gap-1.5 text-sm text-muted"><Clock size={15} class="mt-0.5 shrink-0" aria-hidden="true" /> Pay when you collect your order — card, cash or UPI at the counter.</p>
 						{/if}
@@ -210,7 +289,7 @@
 				<div class="h-fit rounded-3xl bg-white p-6 ring-1 ring-line">
 					<h2 class="font-display text-lg font-semibold text-ink">Order summary</h2>
 					<ul class="mt-3 space-y-1.5 text-[0.95rem] text-muted">
-						{#each cart.detailed as line}<li class="flex justify-between gap-2"><span class="truncate">{line.qty} × {line.item.name}</span><span class="shrink-0 font-semibold text-ink">{money(line.item.price * line.qty)}</span></li>{/each}
+						{#each cart.detailed as line}<li class="flex justify-between gap-2"><span class="truncate">{line.qty} × {line.name}{line.optionsLabel ? ` (${line.optionsLabel})` : ''}</span><span class="shrink-0 font-semibold text-ink">{money(line.price * line.qty)}</span></li>{/each}
 					</ul>
 					<dl class="mt-4 space-y-2 border-t border-line pt-4 text-[0.95rem]">
 						<div class="flex justify-between"><dt class="text-muted">Subtotal</dt><dd class="font-semibold">{money(cart.subtotal)}</dd></div>
