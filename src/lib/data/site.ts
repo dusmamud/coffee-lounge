@@ -20,9 +20,9 @@ export const site = {
 	url: 'https://coffee-lounge.pages.dev',
 	mapEmbed:
 		'https://maps.google.com/maps?q=123%20Brew%20Street%2C%20Maple%20City%2C%20CA&t=&z=15&ie=UTF8&iwloc=&output=embed',
-	instagram: 'https://www.instagram.com/',
-	facebook: 'https://www.facebook.com/',
-	tiktok: 'https://www.tiktok.com/'
+	instagram: 'https://www.instagram.com/thecoffeelounge',
+	facebook: 'https://www.facebook.com/thecoffeelounge',
+	tiktok: 'https://www.tiktok.com/@thecoffeelounge'
 } as const;
 
 export const nav = [
@@ -47,6 +47,19 @@ export const moreNav = [
 	{ label: 'Nutrition & Allergens', href: '/nutrition' },
 	{ label: 'Careers', href: '/careers' },
 	{ label: 'Wholesale', href: '/wholesale' },
+{ label: 'Reservations', href: '/reservations' },
+	{ label: 'My Account', href: '/account' },
+	{ label: 'Delivery', href: '/delivery' },
+	{ label: 'Classes & Workshops', href: '/classes' },
+	{ label: 'Private Hire', href: '/private-hire' },
+	{ label: 'Seasonal Menu', href: '/seasonal' },
+	{ label: 'Our Team', href: '/team' },
+	{ label: 'Sustainability', href: '/sustainability' },
+	{ label: 'Press', href: '/press' },
+	{ label: 'Corporate Gifting', href: '/corporate-gifting' },
+	{ label: 'Community', href: '/community' },
+	{ label: 'Gift Card Balance', href: '/gift-cards/balance' },
+	{ label: 'Sitemap', href: '/sitemap' },
 	{ label: 'Accessibility', href: '/accessibility' },
 	{ label: 'Gallery', href: '/gallery' },
 	{ label: 'Blog', href: '/blog' },
@@ -63,6 +76,10 @@ export type MenuItem = {
 	category: 'Coffee' | 'Tea & Matcha' | 'Food & Bakery';
 	temp: 'Hot' | 'Cold' | 'Food';
 	veg: boolean;
+	vegan: boolean;
+	glutenFree: boolean;
+	nutFree: boolean;
+	dairyFree: boolean;
 	bestseller?: boolean;
 	signature?: boolean;
 	calories: number;
@@ -83,6 +100,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Coffee',
 		temp: 'Hot',
 		veg: true,
+		vegan: false,
+		glutenFree: true,
+		nutFree: true,
+		dairyFree: false,
 		signature: true,
 		bestseller: true,
 		calories: 120,
@@ -101,6 +122,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Coffee',
 		temp: 'Hot',
 		veg: true,
+		vegan: false,
+		glutenFree: true,
+		nutFree: true,
+		dairyFree: false,
 		signature: true,
 		calories: 240,
 		allergens: ['Milk'],
@@ -118,6 +143,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Tea & Matcha',
 		temp: 'Hot',
 		veg: true,
+		vegan: false,
+		glutenFree: true,
+		nutFree: true,
+		dairyFree: false,
 		signature: true,
 		calories: 180,
 		allergens: ['Milk'],
@@ -135,6 +164,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Coffee',
 		temp: 'Cold',
 		veg: true,
+		vegan: false,
+		glutenFree: true,
+		nutFree: true,
+		dairyFree: false,
 		signature: true,
 		calories: 320,
 		allergens: ['Milk'],
@@ -152,6 +185,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Coffee',
 		temp: 'Cold',
 		veg: true,
+		vegan: true,
+		glutenFree: true,
+		nutFree: true,
+		dairyFree: true,
 		signature: true,
 		calories: 15,
 		allergens: [],
@@ -169,6 +206,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Food & Bakery',
 		temp: 'Food',
 		veg: true,
+		vegan: false,
+		glutenFree: false,
+		nutFree: true,
+		dairyFree: false,
 		bestseller: true,
 		calories: 280,
 		allergens: ['Milk', 'Wheat', 'Egg'],
@@ -186,6 +227,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Food & Bakery',
 		temp: 'Food',
 		veg: true,
+		vegan: false,
+		glutenFree: false,
+		nutFree: true,
+		dairyFree: false,
 		bestseller: true,
 		calories: 420,
 		allergens: ['Milk', 'Wheat', 'Egg'],
@@ -203,6 +248,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Food & Bakery',
 		temp: 'Food',
 		veg: true,
+		vegan: false,
+		glutenFree: false,
+		nutFree: false,
+		dairyFree: false,
 		bestseller: true,
 		calories: 380,
 		allergens: ['Wheat', 'Milk', 'Tree nuts (pesto)'],
@@ -220,6 +269,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Coffee',
 		temp: 'Hot',
 		veg: true,
+		vegan: false,
+		glutenFree: true,
+		nutFree: true,
+		dairyFree: false,
 		calories: 190,
 		allergens: ['Milk'],
 		image: 'hero-latte',
@@ -236,6 +289,10 @@ export const menuItems: MenuItem[] = [
 		category: 'Coffee',
 		temp: 'Hot',
 		veg: true,
+		vegan: true,
+		glutenFree: true,
+		nutFree: true,
+		dairyFree: true,
 		calories: 10,
 		allergens: [],
 		image: 'barista',
@@ -307,7 +364,11 @@ export type EventItem = {
 	id: string;
 	title: string;
 	date: string;
+	startDate: string;
 	time: string;
+	spotsLeft: number;
+	free: boolean;
+	walkIn: boolean;
 	location: string;
 	price: string;
 	description: string;
@@ -322,7 +383,11 @@ export const events: EventItem[] = [
 		id: 'latte-art-workshop',
 		title: 'Latte Art Workshop',
 		date: 'Saturday, November 28, 2026',
-		time: '10:00 AM – 12:00 PM',
+
+		startDate: '2026-11-28T10:00:00-08:00',
+		spotsLeft: 2,
+		free: false,
+		walkIn: false,		time: '10:00 AM – 12:00 PM',
 		location: 'Brew Street — Flagship',
 		price: '$35 per person',
 		description:
@@ -336,7 +401,11 @@ export const events: EventItem[] = [
 		id: 'acoustic-friday',
 		title: 'Live Acoustic Fridays',
 		date: 'Every Friday',
-		time: '6:00 PM – 8:00 PM',
+
+		startDate: '2026-11-27T18:00:00-08:00',
+		spotsLeft: 40,
+		free: true,
+		walkIn: true,		time: '6:00 PM – 8:00 PM',
 		location: 'Brew Street — Flagship',
 		price: 'Free entry',
 		description:
@@ -350,7 +419,11 @@ export const events: EventItem[] = [
 		id: 'coffee-tasting-flight',
 		title: 'Coffee Tasting Flight',
 		date: 'Sunday, December 6, 2026',
-		time: '11:00 AM – 12:30 PM',
+
+		startDate: '2026-12-06T11:00:00-08:00',
+		spotsLeft: 12,
+		free: false,
+		walkIn: false,		time: '11:00 AM – 12:30 PM',
 		location: 'Riverside Roastery',
 		price: '$25 per person',
 		description:
@@ -364,7 +437,11 @@ export const events: EventItem[] = [
 		id: 'book-club-morning',
 		title: 'Book Club Morning',
 		date: 'First Saturday of the month',
-		time: '9:00 AM – 10:30 AM',
+
+		startDate: '2026-12-05T09:00:00-08:00',
+		spotsLeft: 30,
+		free: true,
+		walkIn: true,		time: '9:00 AM – 10:30 AM',
 		location: 'Maple Square',
 		price: 'Free · coffee at happy-hour prices',
 		description:
@@ -380,6 +457,7 @@ export const events: EventItem[] = [
 export type BlogPost = {
 	slug: string;
 	title: string;
+	author: string;
 	category: string;
 	date: string;
 	readTime: string;
@@ -393,7 +471,8 @@ export const blogPosts: BlogPost[] = [
 	{
 		slug: 'how-we-roast',
 		title: 'How We Roast: From Green Bean to Your Cup',
-		category: 'Behind the Beans',
+
+		author: 'Jonas Park, Roastmaster',		category: 'Behind the Beans',
 		date: 'November 12, 2026',
 		readTime: '5 min read',
 		image: 'coffee-beans',
@@ -411,7 +490,8 @@ export const blogPosts: BlogPost[] = [
 	{
 		slug: 'latte-art-at-home',
 		title: 'Latte Art at Home: The 5 Mistakes Everyone Makes',
-		category: 'Brew Guides',
+
+		author: 'Maya Chen, Head Barista',		category: 'Brew Guides',
 		date: 'November 4, 2026',
 		readTime: '4 min read',
 		image: 'hero-latte',
@@ -430,7 +510,8 @@ export const blogPosts: BlogPost[] = [
 	{
 		slug: 'cafe-as-third-place',
 		title: 'The Café as a Third Place: Why We Built the Lounge',
-		category: 'Our Story',
+
+		author: 'Alex Morgan, Founder',		category: 'Our Story',
 		date: 'October 22, 2026',
 		readTime: '6 min read',
 		image: 'cafe-interior',
@@ -564,6 +645,13 @@ export type ShopProduct = {
 	imageAlt: string;
 	short: string;
 	badge?: string;
+	origin?: string;
+	farm?: string;
+	altitude?: string;
+	varietal?: string;
+	process?: string;
+	tastingNotes?: string[];
+	roastLevel?: string;
 };
 
 export const shopProducts: ShopProduct[] = [
@@ -574,7 +662,14 @@ export const shopProducts: ShopProduct[] = [
 		kind: 'Beans',
 		image: 'coffee-beans',
 		imageAlt: 'Bag of Maple Roast whole coffee beans beside roasted beans',
-		short: 'Our house espresso blend: chocolate, brown sugar, gentle acidity. Roasted Tuesdays at Riverside.',
+		short: 'Our house espresso blend: chocolate, brown sugar, gentle acidity. Roasted Tuesdays at Riverside.',		origin: 'Maple City blend — Brazil & Colombia',
+		farm: 'Smallholder co-ops, Cerrado (Brazil) & Huila (Colombia)',
+		altitude: '1,100–1,700 m',
+		varietal: 'Yellow Catuaí & Castillo',
+		process: 'Washed & natural, blended after roast',
+		tastingNotes: ['Dark chocolate', 'brown sugar', 'toasted hazelnut'],
+		roastLevel: 'Medium-dark',
+
 		badge: 'Bestseller'
 	},
 	{
@@ -584,7 +679,14 @@ export const shopProducts: ShopProduct[] = [
 		kind: 'Beans',
 		image: 'coffee-beans',
 		imageAlt: 'Single-origin Ethiopian coffee beans in a kraft bag',
-		short: 'Floral, bergamot and stone fruit. The single origin of the week, brewed at the slow bar.',
+		short: 'Floral, bergamot and stone fruit. The single origin of the week, brewed at the slow bar.',		origin: 'Yirgacheffe, Ethiopia',
+		farm: 'Kochere co-operative, Yirgacheffe',
+		altitude: '1,900–2,200 m',
+		varietal: 'Heirloom',
+		process: 'Washed, sun-dried on raised beds',
+		tastingNotes: ['Bergamot', 'jasmine', 'stone fruit'],
+		roastLevel: 'Light-medium',
+
 		badge: 'Limited lot'
 	},
 	{
@@ -594,7 +696,14 @@ export const shopProducts: ShopProduct[] = [
 		kind: 'Beans',
 		image: 'coffee-beans',
 		imageAlt: 'Single-origin Colombian coffee beans in a kraft bag',
-		short: 'Syrupy and sweet: panela, red apple and cocoa. Great as filter or espresso.',
+		short: 'Syrupy and sweet: panela, red apple and cocoa. Great as filter or espresso.',		origin: 'Huila, Colombia',
+		farm: 'La Palma co-operative, Huila',
+		altitude: '1,600–1,850 m',
+		varietal: 'Castillo & Caturra',
+		process: 'Washed, 18-hour fermentation',
+		tastingNotes: ['Panela', 'red apple', 'cocoa'],
+		roastLevel: 'Medium',
+
 		badge: 'New lot'
 	},
 	{
@@ -604,7 +713,15 @@ export const shopProducts: ShopProduct[] = [
 		kind: 'Beans',
 		image: 'cold-brew',
 		imageAlt: 'Cold brew coffee kit with beans and filter bags',
-		short: 'Everything for 18-hour cold brew at home: 12 oz Maple Roast, 6 filter bags and our recipe card.'
+		short: 'Everything for 18-hour cold brew at home: 12 oz Maple Roast, 6 filter bags and our recipe card.',
+		origin: 'Maple Roast, Brazil & Colombia',
+		farm: 'Smallholder co-ops, Cerrado (Brazil) & Huila (Colombia)',
+		altitude: '1,100–1,700 m',
+		varietal: 'Yellow Catuaí & Castillo',
+		process: 'Washed & natural',
+		tastingNotes: ['Dark chocolate', 'brown sugar', 'orange'],
+		roastLevel: 'Medium-dark',
+
 	},
 	{
 		id: 'lounge-mug',
@@ -926,4 +1043,71 @@ export const firstVisitSteps = [
 		title: 'Take a bag home',
 		body: 'Beans are sold at every counter, ground to order. Ask the barista what they are drinking this week — it is usually the right answer.'
 	}
+] as const;
+
+// ─── Gift-card balance (mock demo codes) ────────────────────────────────
+export const giftCardBalances: Record<string, { balance: number; issued: string }> = {
+	'CL-GIFT-1001': { balance: 42.5, issued: 'November 2026' },
+	'CL-GIFT-2026': { balance: 100, issued: 'November 2026' },
+	'CL-GIFT-500': { balance: 25, issued: 'October 2026' }
+};
+
+// ─── Classes & workshops ────────────────────────────────────────────────
+export type CoffeeClass = {
+	id: string; title: string; date: string; time: string; location: string;
+	price: number; capacity: number; booked: number; level: string; blurb: string; includes: string[];
+};
+export const coffeeClasses: CoffeeClass[] = [
+	{ id: 'latte-art-basics', title: 'Latte Art Basics', date: 'Saturday, December 5, 2026', time: '10:00 AM – 12:00 PM', location: 'Brew Street — Flagship', price: 35, capacity: 8, booked: 6, level: 'Beginner', blurb: 'Milk texturing, pitcher control and your first rosetta — all equipment provided.', includes: ['Your own pouring pitcher', 'Bag of Maple Roast beans', 'Printed pour guide'] },
+	{ id: 'pour-over-masterclass', title: 'Pour-Over Masterclass', date: 'Sunday, December 13, 2026', time: '11:00 AM – 1:00 PM', location: 'Riverside Roastery', price: 30, capacity: 10, booked: 4, level: 'Intermediate', blurb: 'Dial in a V60 like our slow bar: grind, ratio, pours and tasting, side by side.', includes: ['Taste four origins', 'Brew recipe card', '10% off beans that day'] },
+	{ id: 'home-brewing-101', title: 'Home Brewing 101', date: 'Saturday, December 19, 2026', time: '9:30 AM – 11:00 AM', location: 'Maple Square', price: 20, capacity: 12, booked: 9, level: 'Beginner', blurb: 'French press, AeroPress and cold brew at home — the gear, the ratios, the routine.', includes: ['Tasting of three methods', 'Home brew starter guide', 'Filter coffee refills'] },
+	{ id: 'espresso-at-home', title: 'Espresso at Home', date: 'Saturday, January 9, 2027', time: '10:00 AM – 12:30 PM', location: 'Brew Street — Flagship', price: 45, capacity: 6, booked: 2, level: 'Advanced', blurb: 'Dose, grind, tamp and time — bring your own machine questions, leave with a recipe.', includes: ['One-on-one machine time', 'Dial-in worksheet', 'Bag of Maple Roast beans'] }
+];
+
+// ─── Team ───────────────────────────────────────────────────────────────
+export const teamMembers = [
+	{ name: 'Maya Chen', role: 'Head Barista · Brew Street', image: 'barista', blurb: 'Maya has poured at the Lounge since 2019 and teaches every latte art workshop. Her rosetta has its own fan club — ask her about the latte art throwdown she won with a swan.', years: 'With us since 2019' },
+	{ name: 'Jonas Park', role: 'Roastmaster · Riverside Roastery', image: 'coffee-beans', blurb: 'Jonas roasts every Tuesday at Riverside and cups every lot before it is approved. He can tell you the altitude of any bean on the wall — and will, happily, at length.', years: 'With us since 2020' },
+	{ name: 'Alex Morgan', role: 'Founder', image: 'cafe-interior', blurb: 'Alex opened the first Lounge in 2019 with one espresso machine and a borrowed grinder. Still on the floor most mornings, still convinced the second cup tastes best.', years: 'Founder, 2019' },
+	{ name: 'Sofia Reyes', role: 'Pastry Chef · Riverside', image: 'butter-croissant', blurb: 'Sofia bakes the morning spread for all three cafés — croissants at 6 AM, the seasonal specials regulars plan their weeks around. Her chocolate cake sells out by noon, most days.', years: 'With us since 2021' },
+	{ name: 'Daniel Okafor', role: 'Barista & Events Host · Brew Street', image: 'team-baristas', blurb: 'Daniel runs the Sunday-evening private hires and the acoustic Fridays. If the room feels looked after, it is usually Daniel.', years: 'With us since 2022' },
+	{ name: 'Priya Nair', role: 'Café Lead · Maple Square', image: 'pour-over-brew', blurb: 'Priya runs the fastest counter in Maple City — in and out in four minutes at the morning rush, and she starts your macchiato when she sees you crossing the square.', years: 'With us since 2021' }
+] as const;
+
+// ─── Press ──────────────────────────────────────────────────────────────
+export const pressItems = [
+	{ outlet: 'Maple City Eats', title: '“The café that made Maple City slow down”', date: 'October 2026', blurb: 'Our third place, our slow bar and the room the neighbourhood shares.' },
+	{ outlet: 'The Daily Grind', title: '“Best cold brew in the city — and it is not close”', date: 'September 2026', blurb: 'The 18-hour steep, the orange twist, and why the regulars queue for it.' },
+	{ outlet: 'Bay Area Coffee Journal', title: '“A roastery tour worth the Saturday morning”', date: 'August 2026', blurb: 'Riverside, roast day, and the cupping table where origins are decided.' },
+	{ outlet: 'Maple City Magazine', title: '“Five cafés to work from — number one is the Lounge”', date: 'July 2026', blurb: 'Wi-Fi on the wall, outlets at most tables, and nobody ever asked to leave.' }
+] as const;
+
+// ─── Seasonal ───────────────────────────────────────────────────────────
+export const seasonalItems = [
+	{ name: 'Spiced Maple Latte', price: 5.95, blurb: 'Espresso, maple syrup, cinnamon and a pinch of nutmeg — the winter regular.', tag: 'Limited · until Jan 31' },
+	{ name: 'Peppermint Mocha', price: 6.25, blurb: 'Belgian chocolate, espresso and cool peppermint, finished with whipped cream.', tag: 'Limited · until Jan 31' },
+	{ name: 'Gingerbread Cold Brew', price: 5.5, blurb: 'Our 18-hour cold brew with gingerbread syrup and sweet-cream cold foam.', tag: 'New this week' },
+	{ name: 'Cranberry Orange Scone', price: 4.25, blurb: 'Baked in-house every morning — cranberry, orange zest, buttery crumb.', tag: 'Bakery · while it lasts' }
+] as const;
+
+// ─── Delivery zones ─────────────────────────────────────────────────────
+export const deliveryZones = [
+	{ zip: '94110', area: 'Brew Street & the Mission', fee: 2.99, note: 'Free over $25' },
+	{ zip: '94111', area: 'Maple Square & Downtown', fee: 2.99, note: 'Free over $25' },
+	{ zip: '94112', area: 'Riverside & the River Walk', fee: 2.99, note: 'Free over $25' },
+	{ zip: '94114', area: 'The Hills (extended zone)', fee: 4.99, note: 'Free over $40' }
+] as const;
+
+// ─── Private hire ───────────────────────────────────────────────────────
+export const privateHireOptions = [
+	{ name: 'Hourly Rental', price: 'From $120 / hour', blurb: 'Brew Street after hours for small gatherings — the room, the counter, the coffee.', includes: ['Up to 30 guests', 'Espresso bar staffed', '2-hour minimum'] },
+	{ name: 'Minimum Spend', price: 'From $600 evening', blurb: 'Sunday evenings, 5–9 PM: the whole room for your group, food and drink against the minimum.', includes: ['Up to 60 guests', 'Passed pastries & sandwiches', 'Dedicated events host'] },
+	{ name: 'Full Buyout', price: 'From $1,500', blurb: 'The entire café, exclusively yours — weddings, launches, wrap parties.', includes: ['Up to 80 guests', 'Full menu + signature drinks', 'Barista team on site'] }
+] as const;
+
+// ─── Past events ────────────────────────────────────────────────────────
+export const pastEvents = [
+	{ title: 'Autumn Roast Day Open House', date: 'Saturday, October 24, 2026', location: 'Riverside Roastery', blurb: 'Roast day, open to the public — the drum, the cupping table and the first crack, up close.' },
+	{ title: 'Pumpkin Spice, Our Way', date: 'Saturday, October 10, 2026', location: 'Brew Street — Flagship', blurb: 'A one-day tasting of our house pumpkin spice — real squash, real spice, no syrup shortcuts.' },
+	{ title: 'Summer Cold Brew Social', date: 'Saturday, August 15, 2026', location: 'Maple Square', blurb: 'Cold brew three ways, iced lattes and the patio at golden hour.' }
 ] as const;

@@ -10,7 +10,6 @@
 		name="description"
 		content="Frequently asked questions about The Coffee Lounge: dairy-free options, ordering ahead, delivery, Wi-Fi, beans to take home and Coffee Loop points."
 	/>
-	<link rel="canonical" href="{site.url}/faq" />
 </svelte:head>
 
 <PageHero

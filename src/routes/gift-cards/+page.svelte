@@ -20,7 +20,6 @@
 		name="description"
 		content="Coffee Lounge gift cards from $25 to $100 — the perfect gift for the coffee lover in your life. Redeemable at all three cafés."
 	/>
-	<link rel="canonical" href="{site.url}/gift-cards" />
 </svelte:head>
 
 <PageHero

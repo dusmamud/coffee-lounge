@@ -7,7 +7,6 @@
 <svelte:head>
 	<title>Nutrition & Allergens — {site.name} | Calories & Allergen Guide</title>
 	<meta name="description" content="Calories and allergens for every Coffee Lounge drink and dish. Dairy-free milk is always free, and our team takes allergies seriously." />
-	<link rel="canonical" href="{site.url}/nutrition" />
 </svelte:head>
 
 <PageHero

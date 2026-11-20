@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ArrowRight, Search } from '@lucide/svelte';
 	import PageHero from '#lib/components/PageHero.svelte';
-	import { blogPosts, events, locations, menuItems, site } from '#lib/data/site.ts';
+	import { blogPosts, brewGuides, events, locations, menuItems, shopProducts, site } from '#lib/data/site.ts';
 
 	let q = $state('');
 	let submitted = $state(false);
@@ -16,11 +16,32 @@
 	});
 
 	const needle = $derived(q.trim().toLowerCase());
+	const dietary = $derived(
+		needle === 'vegan'
+			? menuItems.filter((m) => m.vegan)
+			: needle === 'vegetarian' || needle === 'veg'
+				? menuItems.filter((m) => m.veg)
+				: needle === 'gluten-free' || needle === 'gluten free'
+					? menuItems.filter((m) => m.glutenFree)
+					: needle === 'nut-free' || needle === 'nut free'
+						? menuItems.filter((m) => m.nutFree)
+						: needle === 'dairy-free' || needle === 'dairy free'
+							? menuItems.filter((m) => m.dairyFree)
+							: []
+	);
 	const menuHits = $derived(
 		needle
 			? menuItems.filter((m) =>
-					`${m.name} ${m.short} ${m.category} ${m.ingredients.join(' ')}`.toLowerCase().includes(needle)
+					`${m.name} ${m.short} ${m.category} ${m.ingredients.join(' ')} ${m.veg ? 'veg vegetarian' : ''} ${m.vegan ? 'vegan' : ''} ${m.glutenFree ? 'gluten-free' : ''} ${m.nutFree ? 'nut-free' : ''} ${m.dairyFree ? 'dairy-free' : ''}`.toLowerCase().includes(needle)
 				)
+			: []
+	);
+	const guideHits = $derived(
+		needle ? brewGuides.filter((g) => `${g.title} ${g.method} ${g.intro}`.toLowerCase().includes(needle)) : []
+	);
+	const shopHits = $derived(
+		needle
+			? shopProducts.filter((s) => `${s.name} ${s.short} ${s.kind} ${s.origin ?? ''} ${s.farm ?? ''}`.toLowerCase().includes(needle))
 			: []
 	);
 	const blogHits = $derived(
@@ -34,7 +55,7 @@
 	const locationHits = $derived(
 		needle ? locations.filter((l) => `${l.name} ${l.address}`.toLowerCase().includes(needle)) : []
 	);
-	const total = $derived(menuHits.length + blogHits.length + eventHits.length + locationHits.length);
+	const total = $derived(menuHits.length + blogHits.length + eventHits.length + locationHits.length + guideHits.length + shopHits.length);
 
 	const search = (e: Event) => {
 		e.preventDefault();
@@ -48,7 +69,6 @@
 <svelte:head>
 	<title>Search — {site.name} | Menu, Blog, Events & Locations</title>
 	<meta name="description" content="Search the Coffee Lounge menu, blog, events and cafés — find your drink, a brew guide or the nearest café." />
-	<link rel="canonical" href="{site.url}/search" />
 </svelte:head>
 
 <PageHero
@@ -146,6 +166,36 @@
 									<a href="/locations/{l.id}" class="block rounded-3xl bg-white p-5 ring-1 ring-line hover:shadow-md">
 										<span class="block font-semibold text-ink">{l.name}</span>
 										<span class="mt-1 block text-sm text-muted">{l.address} · {l.hours}</span>
+									</a>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				{#if guideHits.length > 0}
+					<div>
+						<h2 class="font-display text-xl font-semibold text-ink">Brew Guides · {guideHits.length}</h2>
+						<ul class="mt-3 space-y-3">
+							{#each guideHits as g}
+								<li>
+									<a href="/brew-guides" class="block rounded-3xl bg-white p-5 ring-1 ring-line hover:shadow-md">
+										<span class="block font-semibold text-ink">{g.title}</span>
+										<span class="mt-1 block text-sm text-muted">{g.method} · {g.time} · {g.difficulty}</span>
+									</a>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				{#if shopHits.length > 0}
+					<div>
+						<h2 class="font-display text-xl font-semibold text-ink">Shop · {shopHits.length}</h2>
+						<ul class="mt-3 divide-y divide-line rounded-3xl bg-white ring-1 ring-line">
+							{#each shopHits as s}
+								<li>
+									<a href="/shop/{s.id}" class="flex items-center justify-between gap-3 px-5 py-4 hover:bg-sand/60">
+										<span><span class="block font-semibold text-ink">{s.name}</span><span class="block text-sm text-muted">{s.short}</span></span>
+										<span class="shrink-0 font-semibold text-coffee">${s.price.toFixed(2)}</span>
 									</a>
 								</li>
 							{/each}

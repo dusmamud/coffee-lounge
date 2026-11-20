@@ -88,7 +88,7 @@
 									type="button"
 									aria-label="Decrease quantity of {line.name}"
 									onclick={() => cart.setQty(line.id, line.qty - 1)}
-									class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee"
+									class="flex h-12 w-12 items-center justify-center rounded-full border border-line text-ink hover:border-coffee"
 								>
 									<Minus size={16} aria-hidden="true" />
 								</button>
@@ -97,7 +97,7 @@
 									type="button"
 									aria-label="Increase quantity of {line.name}"
 									onclick={() => cart.setQty(line.id, line.qty + 1)}
-									class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee"
+									class="flex h-12 w-12 items-center justify-center rounded-full border border-line text-ink hover:border-coffee"
 								>
 									<Plus size={16} aria-hidden="true" />
 								</button>
@@ -109,7 +109,7 @@
 								type="button"
 								aria-label="Remove {line.name} from cart"
 								onclick={() => cart.remove(line.id)}
-								class="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:text-red-700"
+								class="flex h-12 w-12 items-center justify-center rounded-full text-muted hover:text-red-700"
 							>
 								<Trash2 size={17} aria-hidden="true" />
 							</button>

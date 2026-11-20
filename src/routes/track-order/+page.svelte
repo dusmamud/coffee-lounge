@@ -14,18 +14,28 @@
 	let reordered = $state(false);
 	let pastOrders = $state<PlacedOrder[]>([]);
 
+	// Runs once on mount: loads saved orders into a local first, then
+	// looks the ?ref= up from that local — lookup() reads pastOrders, so
+	// calling it from an effect that writes pastOrders would be the same
+	// read-inside-effect loop as the old /order bug.
 	$effect(() => {
+		let stored: PlacedOrder[] = [];
 		try {
 			const raw = window.localStorage.getItem('coffee-lounge-orders');
-			if (raw) pastOrders = JSON.parse(raw) as PlacedOrder[];
+			if (raw) stored = JSON.parse(raw) as PlacedOrder[];
 		} catch {
-			pastOrders = [];
+			stored = [];
 		}
-		const params = new URLSearchParams(window.location.search);
-		const initial = params.get('ref');
+		pastOrders = stored;
+		const initial = new URLSearchParams(window.location.search).get('ref');
 		if (initial) {
 			ref = initial;
-			lookup();
+			lookedUp = true;
+			const needle = initial.trim().toUpperCase();
+			found =
+				stored.find((o) => o.ref.toUpperCase() === needle) ??
+				demoOrders.find((o) => o.ref.toUpperCase() === needle) ??
+				null;
 		}
 	});
 
@@ -58,7 +68,6 @@
 <svelte:head>
 	<title>Track Your Order — {site.name} | Live Status by Reference</title>
 	<meta name="description" content="Track your Coffee Lounge order by its reference (e.g. CL-2026-1042). See confirmation, preparation and pickup status — and reorder in one tap." />
-	<link rel="canonical" href="{site.url}/track-order" />
 </svelte:head>
 
 <PageHero

@@ -24,7 +24,6 @@
 		name="description"
 		content="Join the Coffee Loop: earn 1 point per $1, unlock Roast and Reserve tiers, a free birthday pastry and a free drink every month."
 	/>
-	<link rel="canonical" href="{site.url}/loyalty" />
 </svelte:head>
 
 <PageHero

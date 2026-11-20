@@ -22,13 +22,28 @@
 	const subscribe = (e: Event, id: string) => {
 		e.preventDefault();
 		subscribedPlan = id;
+		// Save the subscription so /account can manage it (mock, localStorage).
+		try {
+			window.localStorage.setItem(
+				'coffee-lounge-subscription',
+				JSON.stringify({
+					planId: id,
+					status: 'active',
+					blend: 'Maple Roast',
+					frequency: 'Monthly',
+					nextDelivery: 'Tuesday, December 2, 2026',
+					address: '123 Brew Street, Maple City, CA 94110'
+				})
+			);
+		} catch {
+			/* ignore */
+		}
 	};
 </script>
 
 <svelte:head>
 	<title>Shop Beans & Merch — {site.name} | Subscriptions, Beans & Gifts</title>
 	<meta name="description" content="Take the Lounge home: Maple Roast and single-origin beans, coffee subscriptions from $16/month, cold brew kits, mugs and totes." />
-	<link rel="canonical" href="{site.url}/shop" />
 </svelte:head>
 
 <PageHero
@@ -68,7 +83,7 @@
 					{#if p.badge}
 						<p class="text-xs font-bold tracking-wider text-gold-dark">{p.badge.toUpperCase()}</p>
 					{/if}
-					<h2 class="mt-1 font-display text-lg leading-snug font-semibold text-ink">{p.name}</h2>
+					<h2 class="mt-1 font-display text-lg leading-snug font-semibold text-ink"><a href="/shop/{p.id}" class="hover:text-gold-dark">{p.name}</a></h2>
 					<p class="mt-1.5 flex-1 text-[0.95rem] leading-relaxed text-muted">{p.short}</p>
 					<div class="mt-4 flex items-center justify-between gap-3">
 						<p class="font-display text-xl font-semibold text-coffee">{money(p.price)}</p>
@@ -109,7 +124,7 @@
 					{/each}
 				</ul>
 				{#if subscribedPlan === plan.id}
-					<p role="status" class="mt-5 rounded-2xl bg-cream/10 px-5 py-4 text-center font-semibold">You are in! Your first box ships Tuesday (mock).</p>
+					<p role="status" class="mt-5 rounded-2xl bg-cream/10 px-5 py-4 text-center font-semibold">You are in! Your first box ships Tuesday (mock). <a href="/account" class="underline underline-offset-2">Manage it in your account →</a></p>
 				{:else}
 					<form onsubmit={(e) => subscribe(e, plan.id)} class="mt-5">
 						<button type="submit" class="flex min-h-12 w-full items-center justify-center rounded-full {plan.highlight ? 'bg-cream text-coffee-dark' : 'bg-coffee text-white'} px-6 text-sm font-semibold hover:opacity-90">

@@ -20,7 +20,6 @@
 <svelte:head>
 	<title>Catering & Private Events — {site.name} | Office Coffee, Brunch & Private Hire</title>
 	<meta name="description" content="The Coffee Lounge caters offices and events in Maple City — coffee breaks from $8pp, brunch tables from $18pp, and Sunday-evening private hire of Brew Street." />
-	<link rel="canonical" href="{site.url}/catering" />
 </svelte:head>
 
 <PageHero

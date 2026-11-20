@@ -10,7 +10,6 @@
 <svelte:head>
 	<title>Gallery — {site.name} | Coffee, Food & Our Cafés in Photos</title>
 	<meta name="description" content="A look inside The Coffee Lounge: latte art, fresh bakes, the roastery and our three Maple City cafés." />
-	<link rel="canonical" href="{site.url}/gallery" />
 </svelte:head>
 
 <PageHero

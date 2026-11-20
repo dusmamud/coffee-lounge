@@ -46,7 +46,7 @@
 		<div>
 			<h3 class="font-semibold text-cream">Explore</h3>
 			<nav aria-label="Footer" class="mt-3 flex flex-col gap-1">
-				{#each [...nav, { label: 'Gift Cards', href: '/gift-cards' }, { label: 'Coffee Loop Rewards', href: '/loyalty' }, { label: 'Blog', href: '/blog' }, { label: 'Search', href: '/search' }, { label: 'Track Your Order', href: '/track-order' }, { label: 'Brew Guides', href: '/brew-guides' }, { label: 'Reviews', href: '/reviews' }, { label: 'Catering & Private Events', href: '/catering' }, { label: 'First Visit', href: '/first-visit' }] as item}
+				{#each [...nav, { label: 'Gift Cards', href: '/gift-cards' }, { label: 'Coffee Loop Rewards', href: '/loyalty' }, { label: 'Blog', href: '/blog' }, { label: 'Search', href: '/search' }, { label: 'Track Your Order', href: '/track-order' }, { label: 'Brew Guides', href: '/brew-guides' }, { label: 'Reviews', href: '/reviews' }, { label: 'Catering & Private Events', href: '/catering' }, { label: 'Reservations', href: '/reservations' }, { label: 'Delivery', href: '/delivery' }, { label: 'First Visit', href: '/first-visit' }] as item}
 					<a href={item.href} class="min-h-12 content-center text-[0.95rem] text-cream/70 hover:text-white">
 						{item.label}
 					</a>
@@ -75,7 +75,8 @@
 			<a href="/faq" class="min-h-12 content-center hover:text-white">FAQ</a>
 			<a href="/privacy" class="min-h-12 content-center hover:text-white">Privacy Policy</a>
 			<a href="/terms" class="min-h-12 content-center hover:text-white">Terms of Service</a>
-			<a href="/sitemap.xml" class="min-h-12 content-center hover:text-white">Sitemap</a>
+			<a href="/sitemap" class="min-h-12 content-center hover:text-white">Sitemap</a>
+			<a href="/sitemap.xml" class="min-h-12 content-center hover:text-white">Sitemap (XML)</a>
 		</p>
 		<p class="mt-2 px-4">© 2026 The Coffee Lounge. All rights reserved. · Mock website — content for design approval.</p>
 	</div>

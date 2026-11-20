@@ -9,6 +9,7 @@
 	import '@fontsource/inter/700.css';
 	import '../app.css';
 	import { onNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import Lenis from 'lenis';
 	import gsap from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -33,6 +34,9 @@
 			});
 		});
 	});
+
+	// Canonical is the page's own URL: homepage on /, the route path elsewhere.
+	const canonicalUrl = $derived(site.url + (page.url.pathname === '/' ? '' : page.url.pathname));
 
 	const jsonLd = {
 		'@context': 'https://schema.org',
@@ -112,7 +116,9 @@
 		name="description"
 		content="More than just coffee. Artisan coffee, fresh bites, and a cozy ambience in Maple City, CA — your perfect place to relax, work, and connect."
 	/>
-	<link rel="canonical" href={site.url} />
+	<!-- Single canonical + OG set for this page, derived from the route:
+	     pages must NOT emit their own canonical (that duplicated it). -->
+	<link rel="canonical" href={canonicalUrl} />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="The Coffee Lounge" />
 	<meta property="og:title" content="The Coffee Lounge — More Than Just Coffee" />
@@ -120,7 +126,7 @@
 		property="og:description"
 		content="Artisan coffee, fresh bites, and a cozy ambience — your perfect place to relax, work, and connect."
 	/>
-	<meta property="og:url" content={site.url} />
+	<meta property="og:url" content={canonicalUrl} />
 	<meta property="og:image" content="{site.url}/images/hero-latte-1200.jpg" />
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="The Coffee Lounge — More Than Just Coffee" />

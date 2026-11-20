@@ -22,14 +22,13 @@
 <svelte:head>
 	<title>{ev.title} — {site.name} Events | {ev.date}</title>
 	<meta name="description" content="{ev.title} at {ev.location} — {ev.date}, {ev.time}. {ev.description}" />
-	<link rel="canonical" href="{site.url}/events/{ev.id}" />
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'Event',
 		name: ev.title,
 		description: ev.long,
-		startDate: '2026-11-28T10:00:00-08:00',
+		startDate: ev.startDate,
 		location: { '@type': 'Place', name: ev.location, address: site.address },
 		organizer: { '@type': 'Organization', name: site.name, url: site.url },
 		offers: { '@type': 'Offer', price: ev.price.replace(/[^0-9.]/g, '') || '0', priceCurrency: 'USD', availability: 'https://schema.org/InStock' }
@@ -61,7 +60,33 @@
 				</ul>
 			</div>
 			<div class="rounded-3xl bg-white p-6 ring-1 ring-line sm:p-7">
-				{#if reserved}
+				<h2 class="font-display text-xl font-semibold text-ink">Add to your calendar</h2>
+				<p class="mt-1 text-sm text-muted">Download a calendar file (.ics) for {ev.title} — {ev.date}, {ev.time}.</p>
+				<button
+					type="button"
+					onclick={() => {
+						const dt = ev.startDate.slice(0, 19).replace(/[-:]/g, '');
+						const icsText = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//The Coffee Lounge//EN', 'BEGIN:VEVENT', `UID:${ev.id}@thecoffeelounge.com`, `DTSTART:${dt}`, `SUMMARY:${ev.title} — The Coffee Lounge`, `LOCATION:${ev.location}`, `DESCRIPTION:${ev.description}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+						const blob = new Blob([icsText], { type: 'text/calendar' });
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.href = url;
+						a.download = `${ev.id}.ics`;
+						a.click();
+						URL.revokeObjectURL(url);
+					}}
+					class="mt-4 inline-flex min-h-12 items-center rounded-full border border-coffee px-6 text-sm font-semibold text-coffee hover:bg-sand"
+				>
+					Download .ics file
+				</button>
+			</div>
+			<div class="rounded-3xl bg-white p-6 ring-1 ring-line sm:p-7">
+				{#if ev.walkIn}
+					<div class="rounded-2xl bg-sand p-5 text-center">
+						<p class="font-display text-xl font-medium text-ink">No booking needed — just walk in</p>
+						<p class="mt-1 text-sm text-muted">{ev.spots} · {ev.price}. Come early for the best seats.</p>
+					</div>
+				{:else if reserved}
 					<p role="status" class="text-center font-display text-2xl font-medium text-ink">
 						You are in, {name.split(' ')[0]}! {guests} spot{guests === 1 ? '' : 's'} reserved for {ev.title} (mock) — details are on their way to {email}.
 					</p>
@@ -82,7 +107,7 @@
 						<div>
 							<label for="ev-guests" class="block text-sm font-semibold text-ink">Guests</label>
 							<select id="ev-guests" bind:value={guests} class="mt-2 min-h-12 w-full rounded-full border border-line bg-cream px-4 text-base">
-								{#each [1, 2, 3, 4] as n}<option value={n}>{n} {n === 1 ? 'person' : 'people'}</option>{/each}
+								{#each [1, 2, 3, 4].filter((n) => n <= ev.spotsLeft) as n}<option value={n}>{n} {n === 1 ? 'person' : 'people'}</option>{/each}
 							</select>
 						</div>
 						<button type="submit" class="flex min-h-12 w-full items-center justify-center rounded-full bg-coffee px-6 text-base font-semibold text-white hover:bg-coffee-dark">Reserve {guests} Spot{guests === 1 ? '' : 's'}</button>

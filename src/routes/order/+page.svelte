@@ -14,7 +14,7 @@
 	} from '#lib/data/site.ts';
 
 	let step = $state(1);
-	let mode = $state<'pickup' | 'delivery'>('pickup');
+	let mode = $state<'pickup' | 'curbside' | 'delivery'>('pickup');
 	let locationId = $state(locations[0].id);
 	let name = $state('');
 	let phone = $state('');
@@ -25,32 +25,86 @@
 	let orderRef = $state('');
 	let eta = $state('');
 	let earnedPoints = $state(0);
+	let day = $state<'today' | 'tomorrow'>('today');
+	let slot = $state('');
 
-	// Pickup time slots, generated on the client (prerender-safe): ASAP plus
-	// the next 30-minute slots from now until 7:30 PM today.
-	let slots = $state<string[]>(['ASAP · ready in ~15 min']);
-	let slot = $state('ASAP · ready in ~15 min');
+	// One timestamp captured on mount (client only). The slot list is a
+	// $derived value of `day` + this timestamp — nothing is written inside
+	// an effect that reads the value it writes (the P0 loop is gone).
+	let nowMs = $state(0);
 	$effect(() => {
-		const now = new Date();
-		const list = ['ASAP · ready in ~15 min'];
-		const d = new Date(now);
-		d.setMinutes(Math.ceil((d.getMinutes() + 30) / 30) * 30, 0, 0);
-		while (d.getHours() < 19 || (d.getHours() === 19 && d.getMinutes() <= 30)) {
-			list.push(
-				`Today · ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
-			);
-			d.setMinutes(d.getMinutes() + 30);
+		nowMs = Date.now();
+		const params = new URLSearchParams(window.location.search);
+		const loc = params.get('location');
+		if (loc && locations.some((l) => l.id === loc)) locationId = loc;
+		const fulfil = params.get('fulfilment');
+		if (fulfil === 'curbside' || fulfil === 'delivery') mode = fulfil;
+	});
+
+	type Slot = { label: string; soldOut: boolean };
+	// Deterministic mock capacity: ~1 in 4 slots is already full, so the
+	// picker shows real sold-out states instead of promising every time.
+	const isFull = (dayKey: string, label: string) => {
+		let h = 0;
+		for (const c of dayKey + label) h = (h * 31 + c.charCodeAt(0)) % 97;
+		return h % 4 === 0;
+	};
+	const fmtTime = (d: Date) =>
+		d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+	const dayKey = (d: Date) => d.toDateString();
+
+	const slots = $derived.by((): Slot[] => {
+		if (!nowMs) return [];
+		const base = new Date(nowMs);
+		const target = new Date(base);
+		if (day === 'tomorrow') target.setDate(target.getDate() + 1);
+		const key = dayKey(target);
+		const list: Slot[] = [];
+		const start = new Date(target);
+		if (day === 'today') {
+			// ASAP is only offered while the bar can still make it today.
+			if (base.getHours() < 19 || (base.getHours() === 19 && base.getMinutes() < 30)) {
+				list.push({ label: 'ASAP · ready in ~15 min', soldOut: false });
+			}
+			start.setMinutes(Math.ceil((base.getMinutes() + 30) / 30) * 30, 0, 0);
+			if (start.getHours() < base.getHours()) start.setHours(base.getHours());
+		} else {
+			start.setHours(7, 30, 0, 0);
 		}
-		slots = list.slice(0, 9);
-		if (!slots.includes(slot)) slot = slots[0];
+		const end = new Date(target);
+		end.setHours(19, 30, 0, 0);
+		const cursor = new Date(start);
+		while (cursor <= end) {
+			const label = `${day === 'today' ? 'Today' : 'Tomorrow'} · ${fmtTime(cursor)}`;
+			list.push({ label, soldOut: isFull(key, label) });
+			cursor.setMinutes(cursor.getMinutes() + 30);
+		}
+		return list.slice(0, 12);
+	});
+	const availableSlots = $derived(slots.filter((s) => !s.soldOut));
+	const todayClosed = $derived(day === 'today' && slots.length === 0);
+
+	// Keep the selected slot valid when the day or capacity changes.
+	// Guarded write: only writes when the current choice is actually
+	// invalid, so the effect settles after one run instead of looping.
+	$effect(() => {
+		if (availableSlots.length === 0) return;
+		if (!availableSlots.some((s) => s.label === slot)) slot = availableSlots[0].label;
 	});
 
 	const deliveryFee = $derived(mode === 'delivery' && cart.subtotal < FREE_DELIVERY_MIN ? DELIVERY_FEE : 0);
 	const tax = $derived(cart.subtotal * TAX_RATE);
 	const total = $derived(cart.subtotal + tax + deliveryFee);
+	const fulfilmentLabel = $derived(
+		mode === 'pickup'
+			? `Pickup · ${locations.find((l) => l.id === locationId)?.name}`
+			: mode === 'curbside'
+				? `Curbside · ${locations.find((l) => l.id === locationId)?.name}`
+				: 'Delivery'
+	);
 
 	const canContinue = $derived(
-		step === 1 ? cart.detailed.length > 0 : name.trim().length > 1 && phone.trim().length >= 7 && (mode === 'pickup' || address.trim().length > 5)
+		step === 1 ? cart.detailed.length > 0 : name.trim().length > 1 && phone.trim().length >= 7 && (mode !== 'delivery' || address.trim().length > 5)
 	);
 
 	function placeOrder(e: Event) {
@@ -58,19 +112,20 @@
 		const ref = `CL-${Math.floor(100000 + Math.random() * 900000)}`;
 		orderRef = ref;
 		eta =
-			mode === 'pickup'
-				? slot.startsWith('ASAP')
-					? 'Ready in about 15 minutes'
-					: `Ready for pickup ${slot.replace('Today · ', 'today at ')}`
-				: 'Arriving in about 30–40 minutes';
-		// Save the order so /track-order can find it (mock, localStorage only).
+			mode === 'delivery'
+				? 'Arriving in about 30–40 minutes'
+				: mode === 'curbside'
+					? `Ready ${slot.startsWith('ASAP') ? 'in about 15 minutes' : slot.replace('Today · ', 'today at ').replace('Tomorrow · ', 'tomorrow at ')} — we will bring it to your car`
+					: slot.startsWith('ASAP')
+						? 'Ready in about 15 minutes'
+						: `Ready for pickup ${slot.replace('Today · ', 'today at ').replace('Tomorrow · ', 'tomorrow at ')}`;
 		try {
 			const raw = window.localStorage.getItem('coffee-lounge-orders');
 			const prev = raw ? JSON.parse(raw) : [];
 			prev.unshift({
 				ref,
 				status: 'confirmed',
-				placedAt: `${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}, ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · ${mode === 'pickup' ? `Pickup · ${locations.find((l) => l.id === locationId)?.name}` : 'Delivery'}`,
+				placedAt: `${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}, ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · ${fulfilmentLabel}`,
 				items: cart.detailed.map((l) => `${l.qty} × ${l.name}`).join(', '),
 				total: money(total),
 				eta,
@@ -92,20 +147,18 @@
 	<title>Order Online — {site.name} | Pickup & Delivery in Maple City</title>
 	<meta
 		name="description"
-		content="Order coffee and fresh food online from The Coffee Lounge. Pickup in 15 minutes or delivery within 5 miles — free over $25."
+		content="Order coffee and fresh food online from The Coffee Lounge. Pickup in 15 minutes, curbside, or delivery within 5 miles — free over $25."
 	/>
-	<link rel="canonical" href="{site.url}/order" />
 </svelte:head>
 
 <PageHero
 	eyebrow="ORDER ONLINE"
 	title="Your Coffee, Your Way"
-	subtitle="Pickup in about 15 minutes, or delivery within 5 miles — free on orders over $25. This is a demo checkout: no payment is taken."
+	subtitle="Pickup in about 15 minutes, curbside to your car, or delivery within 5 miles — free on orders over $25. This is a demo checkout: no payment is taken."
 />
 
 <section class="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
 	{#if placed && step === 3}
-		<!-- Step 3: confirmation -->
 		<div class="rounded-3xl bg-white p-8 text-center ring-1 ring-line sm:p-12" role="status">
 			<span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-800">
 				<Check size={30} aria-hidden="true" />
@@ -114,8 +167,8 @@
 			<p class="mt-2 text-lg text-muted">{eta}.</p>
 			<div class="mx-auto mt-6 max-w-md rounded-2xl bg-sand p-5 text-left">
 				<p class="flex justify-between text-[0.95rem]"><span class="text-muted">Order reference</span><strong class="text-ink">{orderRef}</strong></p>
-				<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Fulfilment</span><strong class="text-ink">{mode === 'pickup' ? `Pickup · ${locations.find((l) => l.id === locationId)?.name}` : 'Delivery'}</strong></p>
-				{#if mode === 'pickup'}
+				<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Fulfilment</span><strong class="text-ink">{fulfilmentLabel}</strong></p>
+				{#if mode !== 'delivery'}
 					<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Pickup time</span><strong class="text-ink">{slot}</strong></p>
 				{/if}
 				<p class="mt-2 flex justify-between text-[0.95rem]"><span class="text-muted">Payment</span><strong class="text-ink">{payment === 'card' ? 'Card (mock)' : payment === 'applepay' ? 'Apple Pay (mock)' : 'Pay at counter'}</strong></p>
@@ -131,7 +184,6 @@
 			</div>
 		</div>
 	{:else}
-		<!-- Stepper -->
 		<ol class="mb-8 flex items-center justify-center gap-2 text-sm font-semibold" aria-label="Checkout progress">
 			{#each [{ n: 1, label: 'Your cart' }, { n: 2, label: 'Details & payment' }] as s}
 				<li class="flex items-center gap-2">
@@ -171,9 +223,9 @@
 									{/if}
 									<p class="text-sm text-muted">{money(line.price)} each</p>
 									<div class="mt-1.5 flex items-center gap-2">
-										<button type="button" aria-label="Decrease quantity of {line.name}" onclick={() => cart.setQty(line.id, line.qty - 1)} class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">−</button>
+										<button type="button" aria-label="Decrease quantity of {line.name}" onclick={() => cart.setQty(line.id, line.qty - 1)} class="flex h-12 w-12 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">−</button>
 										<span class="min-w-6 text-center font-semibold">{line.qty}</span>
-										<button type="button" aria-label="Increase quantity of {line.name}" onclick={() => cart.setQty(line.id, line.qty + 1)} class="flex h-11 w-11 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">+</button>
+										<button type="button" aria-label="Increase quantity of {line.name}" onclick={() => cart.setQty(line.id, line.qty + 1)} class="flex h-12 w-12 items-center justify-center rounded-full border border-line text-ink hover:border-coffee">+</button>
 									</div>
 								</div>
 								<p class="font-semibold text-ink">{money(line.price * line.qty)}</p>
@@ -199,16 +251,16 @@
 			{/if}
 		{:else}
 			<form onsubmit={placeOrder} class="grid gap-6 lg:grid-cols-[1fr_340px]">
-				<div class="space-y-6">
-					<fieldset class="rounded-3xl bg-white p-6 ring-1 ring-line">
-						<legend class="font-display text-lg font-semibold text-ink">Pickup or delivery?</legend>
-						<div class="mt-4 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Fulfilment method">
-							{#each [{ v: 'pickup', t: 'Pickup', d: 'Ready in ~15 min · Free' }, { v: 'delivery', t: 'Delivery', d: '30–40 min · $2.99, free over $25' }] as o}
+				<div class="min-w-0 space-y-6">
+					<fieldset class="min-w-0 rounded-3xl bg-white p-6 ring-1 ring-line">
+						<legend class="font-display text-lg font-semibold text-ink">Pickup, curbside or delivery?</legend>
+						<div class="mt-4 grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Fulfilment method">
+							{#each [{ v: 'pickup', t: 'Pickup', d: 'Ready in ~15 min · Free' }, { v: 'curbside', t: 'Curbside', d: 'We bring it to your car · Free' }, { v: 'delivery', t: 'Delivery', d: '30–40 min · $2.99, free over $25' }] as o}
 								<button
 									type="button"
 									role="radio"
 									aria-checked={mode === o.v}
-									onclick={() => (mode = o.v as 'pickup' | 'delivery')}
+									onclick={() => (mode = o.v as 'pickup' | 'curbside' | 'delivery')}
 									class="min-h-12 rounded-2xl border-2 p-4 text-left transition-colors duration-150 {mode === o.v ? 'border-coffee bg-sand' : 'border-line bg-white'}"
 								>
 									<span class="block font-semibold text-ink">{o.t}</span>
@@ -216,36 +268,51 @@
 								</button>
 							{/each}
 						</div>
-						{#if mode === 'pickup'}
+						{#if mode !== 'delivery'}
 							<label class="mt-5 block text-sm font-semibold text-ink" for="pickup-location">Choose your café</label>
 							<select id="pickup-location" bind:value={locationId} class="mt-2 min-h-12 w-full rounded-full border border-line bg-cream px-4 text-base">
 								{#each locations as l}<option value={l.id}>{l.name} — {l.address}</option>{/each}
 							</select>
-							<fieldset class="mt-5">
-								<legend class="text-sm font-semibold text-ink">Pickup time</legend>
-								<div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Pickup time slot">
-									{#each slots as s}
-										<button
-											type="button"
-											role="radio"
-											aria-checked={slot === s}
-											onclick={() => (slot = s)}
-											class="min-h-12 rounded-full px-4 text-sm font-semibold transition-colors duration-150 {slot === s ? 'bg-coffee text-white' : 'border border-line bg-cream text-ink hover:border-coffee'}"
-										>
-											{s}
-										</button>
+							<fieldset class="mt-5 min-w-0">
+								<legend class="text-sm font-semibold text-ink">Pickup time — only times the bar can make</legend>
+								<div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Pickup day">
+									{#each [{ v: 'today', t: 'Today' }, { v: 'tomorrow', t: 'Tomorrow' }] as d}
+										<button type="button" role="radio" aria-checked={day === d.v} onclick={() => (day = d.v as 'today' | 'tomorrow')} class="min-h-12 rounded-full px-5 text-sm font-semibold transition-colors duration-150 {day === d.v ? 'bg-coffee text-white' : 'border border-line bg-cream text-ink hover:border-coffee'}">{d.t}</button>
 									{/each}
 								</div>
-								<p class="mt-2 text-xs text-muted">Morning rush? Book a slot and skip the queue — your order waits at the pickup shelf.</p>
+								{#if todayClosed}
+									<p class="mt-3 rounded-2xl bg-sand p-4 text-sm text-ink" role="status">Today's pickup slots have closed — the bar stops taking orders at 7:30 PM. Tomorrow's slots are open below.</p>
+								{:else if availableSlots.length === 0}
+									<p class="mt-3 text-sm text-muted" role="status">No slots left for this day — try tomorrow.</p>
+								{:else}
+									<div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Pickup time slot">
+										{#each slots as s}
+											<button
+												type="button"
+												role="radio"
+												aria-checked={slot === s.label}
+												disabled={s.soldOut}
+												onclick={() => (slot = s.label)}
+												class="min-h-12 rounded-full px-4 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 {slot === s.label ? 'bg-coffee text-white' : 'border border-line bg-cream text-ink hover:border-coffee'}"
+											>
+												{s.label}{s.soldOut ? ' · full' : ''}
+											</button>
+										{/each}
+									</div>
+									<p class="mt-2 text-xs text-muted">Slots marked “full” are already at bar capacity. Morning rush? Book a slot and skip the queue — your order waits at the pickup shelf.</p>
+								{/if}
+								{#if mode === 'curbside'}
+									<p class="mt-3 rounded-2xl bg-sand p-4 text-sm text-ink">Curbside: park in the marked bay, reply to your confirmation text when you arrive, and we will bring your order to your car (mock).</p>
+								{/if}
 							</fieldset>
 						{:else}
 							<label class="mt-5 block text-sm font-semibold text-ink" for="delivery-address">Delivery address</label>
 							<input id="delivery-address" type="text" bind:value={address} required placeholder="Street, apartment, city, ZIP" class="mt-2 min-h-12 w-full rounded-full border border-line bg-cream px-4 text-base placeholder:text-muted" />
-							<p class="mt-2 flex items-start gap-1.5 text-xs text-muted"><MapPin size={13} class="mt-0.5 shrink-0" aria-hidden="true" /> We deliver within 5 miles of each café.</p>
+							<p class="mt-2 flex items-start gap-1.5 text-xs text-muted"><MapPin size={13} class="mt-0.5 shrink-0" aria-hidden="true" /> We deliver within 5 miles of each café. <a href="/delivery" class="font-semibold text-coffee underline underline-offset-2">Check your ZIP →</a></p>
 						{/if}
 					</fieldset>
 
-					<fieldset class="rounded-3xl bg-white p-6 ring-1 ring-line">
+					<fieldset class="min-w-0 rounded-3xl bg-white p-6 ring-1 ring-line">
 						<legend class="font-display text-lg font-semibold text-ink">Your details</legend>
 						<div class="mt-4 grid gap-4 sm:grid-cols-2">
 							<div>
@@ -259,7 +326,7 @@
 						</div>
 					</fieldset>
 
-					<fieldset class="rounded-3xl bg-white p-6 ring-1 ring-line">
+					<fieldset class="min-w-0 rounded-3xl bg-white p-6 ring-1 ring-line">
 						<legend class="font-display text-lg font-semibold text-ink">Payment (mock — nothing is charged)</legend>
 						<div class="mt-4 flex flex-wrap gap-2" role="radiogroup" aria-label="Payment method">
 							{#each [{ v: 'card', t: 'Card' }, { v: 'applepay', t: 'Apple Pay' }, { v: 'cash', t: 'Pay at counter' }] as p}
@@ -281,7 +348,7 @@
 						{:else if payment === 'applepay'}
 							<p class="mt-4 text-sm text-muted">You would confirm with Face ID / Touch ID in the real checkout. This demo skips that step.</p>
 						{:else}
-							<p class="mt-4 flex items-start gap-1.5 text-sm text-muted"><Clock size={15} class="mt-0.5 shrink-0" aria-hidden="true" /> Pay when you collect your order — card, cash or UPI at the counter.</p>
+							<p class="mt-4 flex items-start gap-1.5 text-sm text-muted"><Clock size={15} class="mt-0.5 shrink-0" aria-hidden="true" /> Pay when you collect your order — card or cash at the counter.</p>
 						{/if}
 					</fieldset>
 				</div>
@@ -289,7 +356,7 @@
 				<div class="h-fit rounded-3xl bg-white p-6 ring-1 ring-line">
 					<h2 class="font-display text-lg font-semibold text-ink">Order summary</h2>
 					<ul class="mt-3 space-y-1.5 text-[0.95rem] text-muted">
-						{#each cart.detailed as line}<li class="flex justify-between gap-2"><span class="truncate">{line.qty} × {line.name}{line.optionsLabel ? ` (${line.optionsLabel})` : ''}</span><span class="shrink-0 font-semibold text-ink">{money(line.price * line.qty)}</span></li>{/each}
+						{#each cart.detailed as line}<li class="flex justify-between gap-2"><span class="min-w-0 truncate">{line.qty} × {line.name}{line.optionsLabel ? ` (${line.optionsLabel})` : ''}</span><span class="shrink-0 font-semibold text-ink">{money(line.price * line.qty)}</span></li>{/each}
 					</ul>
 					<dl class="mt-4 space-y-2 border-t border-line pt-4 text-[0.95rem]">
 						<div class="flex justify-between"><dt class="text-muted">Subtotal</dt><dd class="font-semibold">{money(cart.subtotal)}</dd></div>

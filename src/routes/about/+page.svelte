@@ -11,7 +11,6 @@
 		name="description"
 		content="The Coffee Lounge story: a neighbourhood third place in Maple City since 2019 — premium beans, expert baristas and a room the neighbourhood shares."
 	/>
-	<link rel="canonical" href="{site.url}/about" />
 </svelte:head>
 
 <PageHero

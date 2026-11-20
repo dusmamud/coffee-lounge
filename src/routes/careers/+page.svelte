@@ -5,19 +5,23 @@
 	import { careers, site } from '#lib/data/site.ts';
 
 	let appliedId = $state('');
-	let name = $state('');
-	let email = $state('');
+	// One form state per role, initialised up front — typing in one form
+	// never fills the others, and each input binds to its own object.
+	let forms = $state<Record<string, { name: string; email: string }>>(
+		Object.fromEntries(careers.map((r) => [r.id, { name: '', email: '' }]))
+	);
+	const formFor = (id: string) => forms[id];
 
 	const apply = (e: Event, id: string) => {
 		e.preventDefault();
-		if (name.trim() && email.includes('@')) appliedId = id;
+		const f = formFor(id);
+		if (f.name.trim() && f.email.includes('@')) appliedId = id;
 	};
 </script>
 
 <svelte:head>
 	<title>Careers — {site.name} | Barista, Pastry & Events Jobs in Maple City</title>
 	<meta name="description" content="Work at The Coffee Lounge: head barista, weekend barista, pastry chef and events host roles across our three Maple City cafés. Free coffee, always." />
-	<link rel="canonical" href="{site.url}/careers" />
 </svelte:head>
 
 <PageHero
@@ -49,14 +53,14 @@
 					</ul>
 					{#if appliedId === role.id}
 						<p role="status" class="mt-5 rounded-2xl bg-sand p-4 font-semibold text-ink">
-							Thanks, {name.split(' ')[0]}! Your application for {role.title} is in (mock) — we reply within a week.
+							Thanks, {formFor(role.id).name.split(' ')[0]}! Your application for {role.title} is in (mock) — we reply within a week.
 						</p>
 					{:else}
 						<form onsubmit={(e) => apply(e, role.id)} class="mt-5 flex flex-col gap-2 sm:flex-row">
 							<label for="apply-name-{role.id}" class="sr-only">Your name</label>
-							<input id="apply-name-{role.id}" type="text" required bind:value={name} placeholder="Your name" class="min-h-12 min-w-0 flex-1 rounded-full border border-line bg-cream px-4 text-base placeholder:text-muted" />
+							<input id="apply-name-{role.id}" type="text" required bind:value={forms[role.id].name} placeholder="Your name" class="min-h-12 min-w-0 flex-1 rounded-full border border-line bg-cream px-4 text-base placeholder:text-muted" />
 							<label for="apply-email-{role.id}" class="sr-only">Email address</label>
-							<input id="apply-email-{role.id}" type="email" required bind:value={email} placeholder="you@email.com" class="min-h-12 min-w-0 flex-1 rounded-full border border-line bg-cream px-4 text-base placeholder:text-muted" />
+							<input id="apply-email-{role.id}" type="email" required bind:value={forms[role.id].email} placeholder="you@email.com" class="min-h-12 min-w-0 flex-1 rounded-full border border-line bg-cream px-4 text-base placeholder:text-muted" />
 							<button type="submit" class="inline-flex min-h-12 items-center justify-center rounded-full bg-coffee px-6 text-sm font-semibold whitespace-nowrap text-white hover:bg-coffee-dark">Apply Now</button>
 						</form>
 					{/if}

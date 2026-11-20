@@ -10,7 +10,6 @@
 		name="description"
 		content="Coffee notes from the Lounge: how we roast, latte art at home, and why a café is a neighbourhood's third place."
 	/>
-	<link rel="canonical" href="{site.url}/blog" />
 </svelte:head>
 
 <PageHero

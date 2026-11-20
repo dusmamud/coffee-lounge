@@ -98,7 +98,7 @@
 			/>
 			<div class="absolute -bottom-4 left-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-lg ring-1 ring-line sm:left-6">
 				<span class="flex" aria-label="Rated 4.9 out of 5">
-					{#each Array(5) as _}<Star size={15} class="fill-amber-400 text-amber-400" aria-hidden="true" />{/each}
+					{#each Array(5) as _}<Star size={15} class="fill-amber-600 text-amber-600" aria-hidden="true" />{/each}
 				</span>
 				<p class="text-sm leading-tight"><strong class="text-ink">4.9 / 5</strong><br /><span class="text-muted">from 2,400+ guests</span></p>
 			</div>
@@ -232,7 +232,7 @@
 									</div>
 									<div class="min-w-0">
 										<p class="flex" aria-label="Rated {t.stars} out of 5">
-											{#each Array(t.stars) as _}<Star size={16} class="fill-amber-400 text-amber-400" aria-hidden="true" />{/each}
+											{#each Array(t.stars) as _}<Star size={16} class="fill-amber-600 text-amber-600" aria-hidden="true" />{/each}
 										</p>
 										<blockquote class="mt-2 leading-relaxed text-ink">“{t.quote}”</blockquote>
 										<p class="mt-3 text-sm font-semibold text-ink">
@@ -254,7 +254,8 @@
 								aria-selected={tIndex === i}
 								aria-label="Testimonial {i + 1} of {tCount}"
 								onclick={() => emblaApi?.scrollTo(i)}
-								class="h-3 rounded-full transition-[width] duration-200 {tIndex === i ? 'w-8 bg-coffee' : 'w-3 bg-line hover:bg-gold'}"
+								class="flex h-12 w-12 items-center justify-center"
+								><span class="block h-3 rounded-full transition-[width] duration-200 {tIndex === i ? 'w-8 bg-coffee' : 'w-3 bg-line hover:bg-gold'}" aria-hidden="true"></span>
 							></button>
 						{/each}
 					</div>
@@ -340,7 +341,7 @@
 					<button
 						type="submit"
 						aria-label="Subscribe"
-						class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold text-white transition-colors duration-150 hover:bg-gold-dark"
+						class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold-dark text-white transition-colors duration-150 hover:bg-coffee-dark"
 					>
 						<Mail size={20} aria-hidden="true" />
 					</button>

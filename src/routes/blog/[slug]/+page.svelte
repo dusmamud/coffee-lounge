@@ -11,11 +11,22 @@
 <svelte:head>
 	<title>{post.title} — {site.name}</title>
 	<meta name="description" content={post.excerpt} />
-	<link rel="canonical" href="{site.url}/blog/{post.slug}" />
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html `<script type="application/ld+json">${JSON.stringify({
+		'@context': 'https://schema.org',
+		'@type': 'BlogPosting',
+		headline: post.title,
+		description: post.excerpt,
+		author: { '@type': 'Person', name: post.author },
+		publisher: { '@type': 'Organization', name: site.name, url: site.url },
+		datePublished: post.date,
+		mainEntityOfPage: site.url + '/blog/' + post.slug
+	})}</script>`}
 </svelte:head>
 
 <article class="mx-auto max-w-3xl px-4 py-12 sm:px-6">
 	<p class="text-xs font-bold tracking-[0.3em] text-gold-dark">{post.category} · {post.date} · {post.readTime}</p>
+	<p class="mt-2 text-sm font-semibold text-coffee">By {post.author}</p>
 	<h1 class="mt-3 font-display text-[clamp(1.8rem,4.5vw,2.8rem)] leading-tight font-medium text-ink">
 		{post.title}
 	</h1>

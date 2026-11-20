@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Clock, Mail, MapPin, Phone } from '@lucide/svelte';
+	import MapCard from '#lib/components/MapCard.svelte';
 	import PageHero from '#lib/components/PageHero.svelte';
 	import { site } from '#lib/data/site.ts';
 
@@ -20,7 +21,6 @@
 		name="description"
 		content="Contact The Coffee Lounge: 123 Brew Street, Maple City, CA. Call +1 (415) 987-6543 or write to hello@thecoffeelounge.com."
 	/>
-	<link rel="canonical" href="{site.url}/contact" />
 </svelte:head>
 
 <PageHero
@@ -53,13 +53,7 @@
 				<p class="mt-2"><a href="mailto:{site.email}" class="font-semibold break-all text-coffee hover:text-gold-dark">{site.email}</a></p>
 				<p class="mt-1 flex items-center gap-1.5 text-muted"><Clock size={15} aria-hidden="true" /> Replies within one business day.</p>
 			</div>
-			<iframe
-				title="Map of The Coffee Lounge flagship café"
-				src={site.mapEmbed}
-				loading="lazy"
-				class="aspect-[16/10] w-full rounded-3xl border border-line"
-				referrerpolicy="no-referrer-when-downgrade"
-			></iframe>
+				<MapCard embed={site.mapEmbed} name="Brew Street — Flagship" address={site.address} hours={site.hours} />
 		</div>
 
 		<div class="h-fit rounded-3xl bg-white p-6 ring-1 ring-line sm:p-8">

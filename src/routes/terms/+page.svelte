@@ -6,7 +6,6 @@
 <svelte:head>
 	<title>Terms of Service — {site.name}</title>
 	<meta name="description" content="Terms of Service for The Coffee Lounge website (mock). The rules for using this demo site and ordering." />
-	<link rel="canonical" href="{site.url}/terms" />
 </svelte:head>
 
 <PageHero eyebrow="LEGAL" title="Terms of Service" subtitle="Last updated: November 2026. These are mock terms for a demo website." />
@@ -21,7 +20,7 @@
 	<p>
 		The checkout, gift-card and loyalty flows on this site are demonstrations. No payment is taken, no order is
 		placed, and no goods are delivered as a result of using them. In the live site, orders will be confirmed by
-		email, prices will include applicable tax, and delivery will be available within 5 miles of each café.
+		email, prices are shown before tax — 8.5% tax is added at checkout — and delivery will be available within 5 miles of each café.
 	</p>
 	<h2 class="pt-3 font-display text-xl font-semibold text-ink">Gift cards and loyalty</h2>
 	<p>

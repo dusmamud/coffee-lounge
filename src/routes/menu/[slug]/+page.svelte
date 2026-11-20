@@ -65,7 +65,6 @@
 <svelte:head>
 	<title>{item.name} — {money(item.price)} | {site.name}</title>
 	<meta name="description" content={item.short} />
-	<link rel="canonical" href="{site.url}/menu/{item.slug}" />
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',

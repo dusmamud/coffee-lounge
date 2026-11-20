@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ArrowLeft, Clock, MapPin, Phone, Users } from '@lucide/svelte';
+	import MapCard from '#lib/components/MapCard.svelte';
 	import PageHero from '#lib/components/PageHero.svelte';
 	import { locations, site } from '#lib/data/site.ts';
 	import type { PageData } from './$types';
@@ -12,7 +13,6 @@
 <svelte:head>
 	<title>{loc.name} — {site.name} | Café in Maple City, CA</title>
 	<meta name="description" content="{loc.name}, {loc.address}. {loc.long}" />
-	<link rel="canonical" href="{site.url}/locations/{loc.id}" />
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
@@ -39,13 +39,7 @@
 	</a>
 	<div class="mt-4 grid gap-6 lg:grid-cols-[1fr_360px]">
 		<div class="overflow-hidden rounded-3xl ring-1 ring-line">
-			<iframe
-				title="Map of {loc.name}"
-				src={loc.mapEmbed}
-				loading="lazy"
-				class="aspect-[16/10] w-full border-0 lg:aspect-auto lg:h-full lg:min-h-[420px]"
-				referrerpolicy="no-referrer-when-downgrade"
-			></iframe>
+			<MapCard embed={loc.mapEmbed} name={loc.name} address={loc.address} hours={loc.hours} />
 		</div>
 		<div class="space-y-6">
 			<div class="rounded-3xl bg-white p-6 ring-1 ring-line">
@@ -69,7 +63,8 @@
 					{/each}
 				</ul>
 				<div class="mt-5 flex flex-col gap-2">
-					<a href="/order" class="inline-flex min-h-12 items-center justify-center rounded-full bg-coffee px-6 text-sm font-semibold text-white hover:bg-coffee-dark">Order from This Café</a>
+					<a href="/order?location={loc.id}" class="inline-flex min-h-12 items-center justify-center rounded-full bg-coffee px-6 text-sm font-semibold text-white hover:bg-coffee-dark">Order from This Café</a>
+					<a href="/reservations?location={loc.id}" class="inline-flex min-h-12 items-center justify-center rounded-full border border-coffee px-6 text-sm font-semibold text-coffee hover:bg-sand">Book a Table Here</a>
 					<a href="https://maps.google.com/?q={encodeURIComponent(loc.address)}" target="_blank" rel="noopener" class="inline-flex min-h-12 items-center justify-center rounded-full border border-coffee px-6 text-sm font-semibold text-coffee hover:bg-sand">Get Directions →</a>
 				</div>
 			</div>

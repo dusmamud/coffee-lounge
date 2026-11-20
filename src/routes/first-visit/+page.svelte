@@ -7,7 +7,6 @@
 <svelte:head>
 	<title>Your First Visit — {site.name} | What to Expect</title>
 	<meta name="description" content="First time at The Coffee Lounge? No booking needed, order at the counter or ahead, pick your spot and stay as long as you like. Here is how it works." />
-	<link rel="canonical" href="{site.url}/first-visit" />
 </svelte:head>
 
 <PageHero

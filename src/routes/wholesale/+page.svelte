@@ -18,7 +18,6 @@
 <svelte:head>
 	<title>Wholesale Coffee — {site.name} | Beans for Cafés, Offices & Restaurants</title>
 	<meta name="description" content="Wholesale Maple Roast and single-origin beans for cafés, offices and restaurants in Maple City. From 5 kg a week, roasted Tuesdays, delivered fresh." />
-	<link rel="canonical" href="{site.url}/wholesale" />
 </svelte:head>
 
 <PageHero
@@ -57,7 +56,7 @@
 		<div class="rounded-3xl bg-white p-6 ring-1 ring-line sm:p-8">
 			<h2 class="font-display text-2xl font-medium text-ink">Wholesale price guide (mock)</h2>
 			<ul class="mt-4 space-y-3 text-[0.95rem]">
-				{#each [['Maple Roast (house blend)', '$11.50 / lb · 5 kg bags'], ['Single origin of the week', '$13.50 / lb · 5 kg bags'], ['Cold brew concentrate, 5 L', '$42 / box'], ['Decaf Maple Roast', '$12.00 / lb · 5 kg bags']] as row}
+				{#each [['Maple Roast (house blend)', '$11.50 / lb · 11 lb bags (5 kg)'], ['Single origin of the week', '$13.50 / lb · 11 lb bags (5 kg)'], ['Cold brew concentrate, 5 L', '$42 / box'], ['Decaf Maple Roast', '$12.00 / lb · 11 lb bags (5 kg)']] as row}
 					<li class="flex justify-between gap-3 border-b border-line/60 pb-3 last:border-0 last:pb-0"><span class="font-semibold text-ink">{row[0]}</span><span class="text-right text-muted">{row[1]}</span></li>
 				{/each}
 			</ul>

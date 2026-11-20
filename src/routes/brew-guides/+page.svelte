@@ -10,7 +10,6 @@
 <svelte:head>
 	<title>Brew Guides — {site.name} | Pour-Over, Cold Brew, French Press & Espresso</title>
 	<meta name="description" content="Brew better coffee at home with our baristas' guides: the perfect pour-over, 18-hour cold brew, French press done right, and better home espresso." />
-	<link rel="canonical" href="{site.url}/brew-guides" />
 </svelte:head>
 
 <PageHero
@@ -71,6 +70,6 @@
 	</div>
 	<p class="mt-8 rounded-3xl bg-sand p-6 text-center leading-relaxed text-muted">
 		Want hands-on help? Our <a href="/events/latte-art-workshop" class="font-semibold text-coffee underline underline-offset-2">Latte Art Workshop</a> and
-		<a href="/events/coffee-tasting-flight" class="font-semibold text-coffee underline underline-offset-2">Coffee Tasting Flight</a> run every month at Brew Street and Riverside.
+		<a href="/events/coffee-tasting-flight" class="font-semibold text-coffee underline underline-offset-2">Coffee Tasting Flight</a> run regularly at Brew Street and Riverside — see the Events page for the next dates.
 	</p>
 </section>

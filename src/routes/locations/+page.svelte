@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Clock, MapPin, Phone } from '@lucide/svelte';
+	import MapCard from '#lib/components/MapCard.svelte';
 	import PageHero from '#lib/components/PageHero.svelte';
 	import { locations, site } from '#lib/data/site.ts';
 </script>
@@ -10,7 +11,6 @@
 		name="description"
 		content="Find a Coffee Lounge near you: Brew Street flagship, Maple Square and the Riverside Roastery. Hours, phone numbers and maps for all three cafés."
 	/>
-	<link rel="canonical" href="{site.url}/locations" />
 </svelte:head>
 
 <PageHero
@@ -23,13 +23,7 @@
 	<div class="grid gap-6 lg:grid-cols-3">
 		{#each locations as loc}
 			<article class="flex flex-col overflow-hidden rounded-3xl bg-white ring-1 ring-line">
-				<iframe
-					title="Map of {loc.name}"
-					src={loc.mapEmbed}
-					loading="lazy"
-					class="aspect-[16/10] w-full border-0"
-					referrerpolicy="no-referrer-when-downgrade"
-				></iframe>
+				<MapCard embed={loc.mapEmbed} name={loc.name} address={loc.address} hours={loc.hours} />
 				<div class="flex flex-1 flex-col p-6">
 					<h2 class="font-display text-xl font-semibold text-ink">
 						<a href="/locations/{loc.id}" class="hover:text-gold-dark">{loc.name}</a>
@@ -58,7 +52,13 @@
 							View Details & Hours
 						</a>
 						<a
-							href="/order"
+							href="/reservations?location={loc.id}"
+							class="inline-flex min-h-12 items-center justify-center rounded-full border border-line px-6 text-sm font-semibold text-ink transition-colors duration-150 hover:border-coffee"
+						>
+							Book a table here
+						</a>
+						<a
+							href="/order?location={loc.id}"
 							class="inline-flex min-h-12 items-center justify-center rounded-full border border-coffee px-6 text-sm font-semibold text-coffee transition-colors duration-200 hover:bg-sand"
 						>
 							Order from this café

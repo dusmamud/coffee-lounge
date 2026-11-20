@@ -8,6 +8,10 @@
 	let category = $state<string>('All');
 	let temp = $state<string>('All');
 	let vegOnly = $state(false);
+	let veganOnly = $state(false);
+	let glutenFreeOnly = $state(false);
+	let nutFreeOnly = $state(false);
+	let dairyFreeOnly = $state(false);
 	let sort = $state<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
 
 	const filtered = $derived.by(() => {
@@ -15,6 +19,10 @@
 			if (category !== 'All' && m.category !== category) return false;
 			if (temp !== 'All' && m.temp !== temp) return false;
 			if (vegOnly && !m.veg) return false;
+			if (veganOnly && !m.vegan) return false;
+			if (glutenFreeOnly && !m.glutenFree) return false;
+			if (nutFreeOnly && !m.nutFree) return false;
+			if (dairyFreeOnly && !m.dairyFree) return false;
 			if (query.trim()) {
 				const q = query.trim().toLowerCase();
 				if (!(m.name + ' ' + m.short + ' ' + m.long).toLowerCase().includes(q)) return false;
@@ -34,13 +42,12 @@
 		name="description"
 		content="Browse the Coffee Lounge menu: signature coffees, matcha, cold brew and fresh-baked food. Search, filter by hot or cold, and sort by price."
 	/>
-	<link rel="canonical" href="{site.url}/menu" />
 </svelte:head>
 
 <PageHero
 	eyebrow="OUR MENU"
 	title="Coffee, Tea & Fresh Bites"
-	subtitle="Everything is made to order at the counter. Prices include tax at checkout — dairy-free milk is always free."
+	subtitle="Everything is made to order at the counter. Prices are shown before tax — 8.5% tax is added at checkout. Dairy-free milk is always free."
 />
 
 <section class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
@@ -59,9 +66,24 @@
 			</label>
 			<div class="flex flex-wrap items-center gap-2">
 				<label class="flex min-h-12 items-center gap-2 rounded-full border border-line px-4 text-sm font-semibold text-ink">
-					<input type="checkbox" bind:checked={vegOnly} class="h-5 w-5 accent-[#5c3a21]" />
+					<input type="checkbox" bind:checked={vegOnly} class="h-6 w-6 accent-[#5c3a21]" />
 					Veg only
 				</label>
+				{#each [{ l: 'Vegan', k: 'vegan', v: veganOnly }, { l: 'Gluten-free', k: 'gf', v: glutenFreeOnly }, { l: 'Nut-free', k: 'nf', v: nutFreeOnly }, { l: 'Dairy-free', k: 'df', v: dairyFreeOnly }] as f}
+					<button
+						type="button"
+						aria-pressed={f.v}
+						onclick={() => {
+							if (f.k === 'vegan') veganOnly = !veganOnly;
+							if (f.k === 'gf') glutenFreeOnly = !glutenFreeOnly;
+							if (f.k === 'nf') nutFreeOnly = !nutFreeOnly;
+							if (f.k === 'df') dairyFreeOnly = !dairyFreeOnly;
+						}}
+						class="min-h-12 rounded-full border px-4 text-sm font-semibold transition-colors duration-150 {f.v ? 'border-coffee bg-coffee text-white' : 'border-line bg-cream text-ink hover:border-coffee'}"
+					>
+						{f.l}
+					</button>
+				{/each}
 				<label class="flex min-h-12 items-center gap-2 text-sm font-semibold text-ink">
 					<span class="sr-only">Sort by price</span>
 					<select bind:value={sort} class="min-h-12 rounded-full border border-line bg-cream px-4 text-sm font-semibold text-ink">
@@ -93,8 +115,8 @@
 					type="button"
 					aria-pressed={temp === t}
 					onclick={() => (temp = t)}
-					class="min-h-11 rounded-full px-4 text-sm font-semibold transition-colors duration-150 {temp === t
-						? 'bg-gold text-white'
+					class="min-h-12 rounded-full px-4 text-sm font-semibold transition-colors duration-150 {temp === t
+						? 'bg-gold-dark text-white'
 						: 'border border-line bg-cream text-ink hover:border-gold-dark'}"
 				>
 					{t === 'All' ? 'Any temperature' : t}
@@ -114,7 +136,7 @@
 			<p class="mt-2 text-muted">Try a different word, or clear the filters to see the full menu.</p>
 			<button
 				type="button"
-				onclick={() => { query = ''; category = 'All'; temp = 'All'; vegOnly = false; }}
+				onclick={() => { query = ''; category = 'All'; temp = 'All'; vegOnly = false; veganOnly = false; glutenFreeOnly = false; nutFreeOnly = false; dairyFreeOnly = false; }}
 				class="mt-5 inline-flex min-h-12 items-center rounded-full bg-coffee px-6 text-sm font-semibold text-white hover:bg-coffee-dark"
 			>
 				Clear all filters

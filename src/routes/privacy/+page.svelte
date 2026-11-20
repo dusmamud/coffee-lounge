@@ -6,7 +6,6 @@
 <svelte:head>
 	<title>Privacy Policy — {site.name}</title>
 	<meta name="description" content="Privacy Policy for The Coffee Lounge website (mock). How we handle the information you share with us." />
-	<link rel="canonical" href="{site.url}/privacy" />
 </svelte:head>
 
 <PageHero eyebrow="LEGAL" title="Privacy Policy" subtitle="Last updated: November 2026. This is a mock policy for a demo website." />

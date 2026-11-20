@@ -7,7 +7,6 @@
 <svelte:head>
 	<title>Accessibility — {site.name} | Step-Free Access, Assistance & More</title>
 	<meta name="description" content="The Coffee Lounge is step-free at all three cafés, with accessible washrooms, large-print menus, hearing-loop seating and staff trained to help." />
-	<link rel="canonical" href="{site.url}/accessibility" />
 </svelte:head>
 
 <PageHero

@@ -17,13 +17,12 @@
 <svelte:head>
 	<title>Reviews — {site.name} | What Our Guests Say</title>
 	<meta name="description" content="Guest reviews of The Coffee Lounge in Maple City — coffee, pastries, workspace and the team, rated by the people who actually come here." />
-	<link rel="canonical" href="{site.url}/reviews" />
 </svelte:head>
 
 <PageHero
 	eyebrow="GUEST REVIEWS"
 	title="What Our Guests Say"
-	subtitle="4.9 out of 5 from 2,400+ guests — in their words, not ours. Every review below is from a real regular (mock data for design review)."
+	subtitle="4.9 out of 5 from 2,400+ guests sitewide — in their words, not ours. The six reviews below are recent 5-star reviews from regulars (mock data for design review)."
 />
 
 <section class="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
@@ -47,7 +46,7 @@
 						<p class="text-sm text-muted">{t.role}</p>
 					</div>
 					<p class="ml-auto flex" aria-label="Rated {t.stars} out of 5">
-						{#each Array(t.stars) as _}<Star size={15} class="fill-amber-400 text-amber-400" aria-hidden="true" />{/each}
+						{#each Array(t.stars) as _}<Star size={15} class="fill-amber-600 text-amber-600" aria-hidden="true" />{/each}
 					</p>
 				</div>
 				<blockquote class="mt-4 leading-relaxed text-ink">“{t.quote}”</blockquote>
@@ -77,7 +76,7 @@
 									onclick={() => (stars = n)}
 									class="flex h-12 w-12 items-center justify-center rounded-full hover:bg-sand"
 								>
-									<Star size={24} class={stars >= n ? 'fill-amber-400 text-amber-400' : 'text-line'} aria-hidden="true" />
+									<Star size={24} class={stars >= n ? 'fill-amber-600 text-amber-600' : 'text-line'} aria-hidden="true" />
 								</button>
 							{/each}
 						</div>
